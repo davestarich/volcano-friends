@@ -169,8 +169,15 @@ button{font-family:inherit;cursor:pointer}
 .bigbtn.puz{background:var(--orange);width:120px;height:120px}
 #celebrate{z-index:40}
 #picker{background:rgba(255,255,255,.3)}
-#pickGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:3.5vmin;max-width:1100px;padding:90px 16px 16px}
-.ptile{--d:0s;position:relative;width:clamp(140px,min(27vw,42vh),300px);aspect-ratio:4/3;border-radius:22px;border:6px solid #fff;padding:0;
+#pickGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:3.5vmin;max-width:1100px;padding:84px 16px 0}
+#sizeRow{display:flex;flex-wrap:wrap;justify-content:center;gap:2.5vmin;padding:0 16px 12px}
+.sizeBtn{--sb:clamp(100px,14vmin,124px);width:var(--sb);height:var(--sb);border-radius:26px;border:6px solid #fff;background:var(--c);padding:6px 0 0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;
+  font:900 calc(var(--sb)*.3)/1 var(--kid);text-shadow:0 2px 0 rgba(0,0,0,.25);
+  box-shadow:0 8px 16px rgba(0,0,0,.18),inset 0 -8px 0 rgba(0,0,0,.12);transition:transform .2s,box-shadow .2s}
+.sizeBtn svg{width:62%;height:auto}
+.sizeBtn.on{transform:scale(1.12);box-shadow:0 0 0 6px #ffd93d,0 0 26px 8px #fff59d,inset 0 -8px 0 rgba(0,0,0,.12)}
+.ptile{--d:0s;position:relative;width:clamp(130px,min(27vw,31vh),300px);aspect-ratio:4/3;border-radius:22px;border:6px solid #fff;padding:0;
   background-size:100% 100%;box-shadow:0 10px 22px rgba(0,0,0,.2);animation:popIn .45s var(--d) both,bob 3s ease-in-out calc(var(--d) + .45s) infinite}
 .ptile .badge{position:absolute;right:-16px;top:-16px;width:52px;height:52px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.2))}
 .ptile .badge svg{width:100%;height:100%}
@@ -277,7 +284,7 @@ button{font-family:inherit;cursor:pointer}
 </div>
 
 <!-- PUZZLE PICKER -->
-<div id="picker" class="overlay"><div id="pickGrid"></div></div>
+<div id="picker" class="overlay"><div id="pickGrid"></div><div id="sizeRow"></div></div>
 
 <!-- START -->
 <div id="start" class="overlay show">
@@ -873,7 +880,7 @@ function spawnPuff() {
 }
 
 /* ================= GAME STATE ================= */
-const G = { done: new Set(), state: 'start', token: 0, level: 0, stage: 0, rumbling: false, draining: false, paused: false, count: 0, q: null, lastKey: null, puffT: 0, emitting: 0, erupts: 0, snap: '', snapPieces: 12 };
+const G = { done: new Set(), state: 'start', token: 0, level: 0, stage: 0, rumbling: false, draining: false, paused: false, count: 0, q: null, lastKey: null, puffT: 0, emitting: 0, erupts: 0, snap: '' };
 function dinoDo(cls) { dino.classList.remove('hop', 'dance', 'nervous'); void dino.getBoundingClientRect(); if (cls) dino.classList.add(cls); }
 dino.addEventListener('animationend', e => { if (e.animationName === 'hop') dino.classList.remove('hop'); });
 function showOnly(which) {
@@ -999,8 +1006,28 @@ function showPicker() {
     b.addEventListener('click', () => { A.init(); SFX.tap(); startPuzzle(pz); });
     grid.appendChild(b);
   });
+  renderSizes();
   $('#picker').classList.add('show');
   V.say('Which puzzle do you want to build?');
+}
+// Piece-count buttons: the number plus a little grid picture, so no reading is needed
+const SIZES = [[6, '#2ec4b6'], [12, '#9b5de5'], [20, '#ff8c42'], [40, '#ff5d8f']];
+function sizeIcon(n) {
+  const [cols, rows] = gridFor(n), g = 3, w = (100 - g * (cols + 1)) / cols, h = (75 - g * (rows + 1)) / rows;
+  let r = '';
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) r += `<rect x="${g + x * (w + g)}" y="${g + y * (h + g)}" width="${w}" height="${h}" rx="${Math.min(4, w / 4)}"/>`;
+  return `<svg viewBox="0 0 100 75" fill="#fff" fill-opacity=".92">${r}</svg>`;
+}
+function renderSizes() {
+  const row = $('#sizeRow'); row.innerHTML = '';
+  SIZES.forEach(([n, c]) => {
+    const b = document.createElement('button');
+    b.className = 'sizeBtn' + (+S.pieces === n ? ' on' : '');
+    b.style.setProperty('--c', c); b.setAttribute('aria-label', n + ' pieces');
+    b.innerHTML = `${sizeIcon(n)}<span>${n}</span>`;
+    b.addEventListener('click', () => { A.init(); SFX.tap(); S.pieces = n; saveS(); renderSizes(); V.say(`${n} pieces!`); });
+    row.appendChild(b);
+  });
 }
 function startPuzzle(pz = P.puz) {
   G.token++; G.state = 'puzzle'; G.rumbling = false; G.paused = false;
@@ -1261,7 +1288,6 @@ const OPTS = [
   { key: 'mathOps', label: 'Math (within 10)', opts: [['plus', 'Adding'], ['both', 'Adding + taking away']], show: () => S.mode === 'math' },
   { key: 'choices', label: 'Answer bubbles', opts: [[3, '3'], [4, '4 (Advanced)']] },
   { key: 'speed', label: 'Volcano speed', opts: [['slow', 'Slow'], ['medium', 'Medium'], ['fast', 'Fast']] },
-  { key: 'pieces', label: 'Puzzle pieces', opts: [[6, '6'], [12, '12'], [20, '20'], [40, '40 (Hard)']] },
   { key: 'music', label: 'Music', opts: [[true, 'On'], [false, 'Off']] },
   { key: 'voice', label: 'Voice', opts: [[true, 'On'], [false, 'Off']] },
 ];
@@ -1287,7 +1313,7 @@ function renderSettings() {
 const qSnap = () => JSON.stringify([S.mode, S.numMax, S.letterCase, S.mathOps, S.choices]);
 function openSettings() {
   G.paused = true; V.stop();
-  G.snap = qSnap(); G.snapPieces = S.pieces;
+  G.snap = qSnap();
   renderSettings(); $('#settings').classList.add('show');
 }
 function closeSettings() {
@@ -1295,8 +1321,7 @@ function closeSettings() {
 }
 $('#sDone').addEventListener('click', () => {
   closeSettings();
-  if (G.state === 'puzzle' && S.pieces !== G.snapPieces) startPuzzle();
-  else if (['quiz', 'correct', 'erupting'].includes(G.state)) {
+  if (['quiz', 'correct', 'erupting'].includes(G.state)) {
     if (qSnap() !== G.snap) nextQuestion();
     else if (G.state === 'quiz' && G.q) V.say(G.q.speech);
   }
