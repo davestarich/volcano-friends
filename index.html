@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#6ccff6">
+<title>Volcano Friends</title>
+<style>
+:root{
+  --kid:"Comic Sans MS","Chalkboard SE","Comic Neue","Marker Felt",system-ui,sans-serif;
+  --ink:#5a2a1c;
+  --teal:#2ec4b6; --purple:#9b5de5; --pink:#ff5d8f; --yellow:#ffbe0b; --green:#6bcb3a; --orange:#ff8c42; --blue:#3a86ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#bdeeff;touch-action:none;overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:var(--kid)}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- background scene ---------- */
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+#bg .rays{transform-box:fill-box;transform-origin:center;animation:spin 40s linear infinite}
+#bg .drift{animation:drift 70s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{from{transform:translateX(-420px)}to{transform:translateX(1900px)}}
+#bird{position:fixed;top:9vh;left:0;width:70px;z-index:1;pointer-events:none;animation:fly 26s linear infinite 4s;transform:translateX(-120px)}
+#bird .wing{transform-box:fill-box;transform-origin:50% 100%;animation:flap .35s ease-in-out infinite alternate}
+@keyframes fly{0%{transform:translate(-120px,0)}25%{transform:translate(25vw,-3vh)}50%{transform:translate(50vw,2vh)}75%{transform:translate(75vw,-2vh)}100%{transform:translate(calc(100vw + 120px),0)}}
+@keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(-.6)}}
+#dino{position:fixed;right:1.5vw;bottom:1vh;width:clamp(90px,15vmin,160px);z-index:2;pointer-events:none;transform-origin:50% 100%}
+#dino.hop{animation:hop .7s ease-out}
+#dino.dance{animation:dance .8s ease-in-out infinite}
+#dino.nervous{animation:shake .35s linear infinite}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}15%{transform:scale(1.1,.9)}45%{transform:translateY(-45%) scale(.95,1.05)}75%{transform:translateY(0) scale(1.1,.9)}}
+
+/* ---------- volcano character ---------- */
+.vol{width:100%;height:100%;display:block;overflow:visible}
+.vol .f-open,.vol .f-sleep,.vol .f-gig,.vol .f-brow,.vol .m-smile,.vol .m-open,.vol .m-o,.vol .m-wavy,.vol .sweat{display:none}
+.face-sleep .f-sleep,.face-sleep .m-smile{display:inline}
+.face-calm .f-open,.face-calm .m-smile{display:inline}
+.face-happy .f-open,.face-happy .m-open{display:inline}
+.face-nervous .f-open,.face-nervous .m-o,.face-nervous .f-brow{display:inline}
+.face-worried .f-open,.face-worried .m-wavy,.face-worried .f-brow,.face-worried .sweat{display:inline}
+.face-giggle .f-gig,.face-giggle .m-open{display:inline}
+.vol .eyes{transform-box:fill-box;transform-origin:center;animation:blink 5s infinite}
+.wake .vol .eyes{animation:dblink .9s 2}
+.vol .pupils{transition:transform .3s}
+.face-nervous .pupils,.face-worried .pupils{transform:translateY(-7px)}
+.vol .sweat{animation:drip 1.2s ease-in infinite}
+.vol .lavaflow{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);transition:transform 1s ease-out}
+.vol.erupting .lavaflow{transform:scaleY(1);animation:lavaGlow .45s ease-in-out infinite alternate}
+@keyframes lavaGlow{from{filter:brightness(1)}to{filter:brightness(1.25)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+@keyframes dblink{0%,100%{transform:scaleY(1)}25%,75%{transform:scaleY(.08)}50%{transform:scaleY(1)}}
+@keyframes drip{0%{transform:translateY(0);opacity:1}100%{transform:translateY(40px);opacity:0}}
+
+.vwrap{position:relative;aspect-ratio:400/380;transform-origin:50% 100%}
+.vwrap.r1{animation:wiggle .7s ease-in-out infinite}
+.vwrap.r2{animation:shake .32s linear infinite}
+.vwrap.r3{animation:shake3 .16s linear infinite}
+.vwrap.erupt{animation:eruptBounce .45s ease-in-out infinite}
+.vwrap.dance{animation:dance 1s ease-in-out infinite}
+.vwrap.wake{animation:wakeUp .8s ease-out}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-1.6deg)}75%{transform:rotate(1.6deg)}}
+@keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-4px,1px) rotate(-2deg)}75%{transform:translate(4px,-1px) rotate(2deg)}}
+@keyframes shake3{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-7px,2px) rotate(-3deg)}75%{transform:translate(7px,-2px) rotate(3deg)}}
+@keyframes eruptBounce{0%,100%{transform:scale(1,1)}50%{transform:scale(1.07,.93)}}
+@keyframes dance{0%,100%{transform:rotate(-7deg) translateY(0)}25%{transform:rotate(0) translateY(-8%)}50%{transform:rotate(7deg) translateY(0)}75%{transform:rotate(0) translateY(-8%)}}
+@keyframes wakeUp{0%{transform:scale(1)}30%{transform:scale(1.12,.9)}60%{transform:scale(.95,1.08)}100%{transform:scale(1)}}
+.puff{position:absolute;top:21%;width:var(--s);height:var(--s);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 35% 35%,#fff 0 30%,var(--pc) 100%);box-shadow:calc(var(--s)*.45) calc(var(--s)*.1) 0 calc(var(--s)*-.1) var(--pc),calc(var(--s)*-.45) calc(var(--s)*.12) 0 calc(var(--s)*-.12) var(--pc);
+  animation:puffUp 2.2s ease-out forwards}
+@keyframes puffUp{0%{transform:translate(-50%,0) scale(.3);opacity:.95}100%{transform:translate(-50%,-160%) scale(1.5);opacity:0}}
+
+/* ---------- HUD ---------- */
+.hudbtn{position:fixed;z-index:80;border:5px solid #fff;border-radius:50%;display:grid;place-items:center;padding:0;
+  box-shadow:0 6px 14px rgba(0,0,0,.2)}
+#mute{top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));width:74px;height:74px;background:var(--purple)}
+#mute svg{width:70%;height:70%}
+#mute .slash{display:none}
+#mute.off{background:#b9a7d6}
+#mute.off .slash{display:inline}
+#gear{top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:58px;height:58px;background:rgba(255,255,255,.55);border:3px solid rgba(255,255,255,.9);box-shadow:none}
+#gear svg{width:100%;height:100%}
+#gear .ring{transition:none}
+#gear.holding{background:rgba(255,255,255,.85)}
+#prog{position:fixed;top:max(22px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:70;display:flex;gap:6px;
+  background:rgba(255,255,255,.55);padding:8px 12px;border-radius:40px}
+#prog .dot{width:clamp(20px,3.4vmin,34px);height:clamp(20px,3.4vmin,34px);display:block}
+#prog .dot svg{width:100%;height:100%}
+#prog .dot.on svg{animation:starPop .5s ease-out}
+
+/* ---------- puzzle ---------- */
+#puzzle{position:fixed;inset:0;z-index:5}
+#board{position:absolute;border-radius:16px;background:rgba(255,255,255,.35);box-shadow:0 0 0 6px rgba(255,255,255,.7),0 10px 30px rgba(0,0,0,.15)}
+#guideImg{position:absolute;inset:0;border-radius:16px;background-size:100% 100%;opacity:.28;filter:saturate(.5)}
+#cells{position:absolute;inset:0;display:grid}
+#cells div{border:2px dashed rgba(90,42,28,.25)}
+#full{position:absolute;inset:0;border-radius:16px;background-size:100% 100%;opacity:0;transition:opacity .5s}
+#full.show{opacity:1}
+#board.done{box-shadow:0 0 0 8px #fff,0 0 40px 16px #fff59d}
+.piece{position:absolute;left:0;top:0;border:3px solid #fff;border-radius:12px;background-origin:border-box;background-clip:border-box;
+  background-repeat:no-repeat;box-shadow:0 6px 14px rgba(0,0,0,.28);touch-action:none;cursor:grab;will-change:transform}
+.piece.drag{box-shadow:0 16px 30px rgba(0,0,0,.35);cursor:grabbing}
+.piece.placed{border-color:transparent;border-radius:2px;box-shadow:none;transition:transform .18s ease-out,border-color .3s;cursor:default}
+
+/* ---------- quiz ---------- */
+#quiz{position:fixed;inset:0;z-index:5;display:grid;grid-template-columns:1.05fr 1fr;align-items:center;
+  padding:96px 2vw 2vh 2vw}
+#volArea{display:flex;align-items:flex-end;justify-content:center;gap:1.5vw;height:100%;padding-bottom:3vh}
+#qVolWrap{height:min(60vh,40vw)}
+#meter{height:min(50vh,34vw);aspect-ratio:90/420;margin-bottom:2vh}
+#meter svg{width:100%;height:100%;overflow:visible}
+#meter.hot{animation:shake .3s linear infinite}
+#qArea{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vmin;height:100%}
+#qTop{display:flex;align-items:center;justify-content:center;gap:3vmin;flex-wrap:wrap}
+#repeat{width:110px;height:110px;border-radius:50%;border:6px solid #fff;background:var(--teal);padding:0;display:grid;place-items:center;
+  box-shadow:0 8px 16px rgba(0,0,0,.2),inset 0 -8px 0 rgba(0,0,0,.12)}
+#repeat svg{width:64%;height:64%}
+#repeat.talking{animation:pulse 1s ease-in-out infinite}
+#problem{display:flex;align-items:flex-end;gap:1.6vmin;background:rgba(255,255,255,.8);border-radius:28px;padding:1.6vmin 2.4vmin;
+  box-shadow:0 8px 18px rgba(0,0,0,.12);border:5px solid #fff}
+#problem .grp{display:flex;flex-direction:column;align-items:center;gap:6px}
+#problem .dinos{display:grid;gap:2px}
+#problem .dn{width:clamp(28px,6vmin,56px);height:clamp(25px,5.3vmin,50px)}
+#problem .dn.gone{opacity:.28;transform:translateX(6px) rotate(8deg)}
+#problem .num,#problem .op{font:900 clamp(34px,7vmin,70px)/1 var(--kid);color:var(--ink)}
+#problem .op{align-self:flex-end;color:var(--purple);padding-bottom:2px}
+#problem .qm{font:900 clamp(34px,7vmin,70px)/1 var(--kid);color:#fff;background:var(--orange);border-radius:50%;width:1.3em;height:1.3em;display:grid;place-items:center;border:4px solid #fff}
+#bubbles{--bs:max(100px,min(20vmin,calc((50vw - 110px)/var(--n,3))));display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(12px,2.5vmin,28px);
+  transition:opacity .4s,transform .4s}
+#bubbles.away{opacity:0;transform:scale(.8);pointer-events:none}
+.bubble{--d:0s;width:var(--bs);height:var(--bs);border-radius:50%;border:6px solid #fff;padding:0;color:#fff;
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.9) 0 9%,rgba(255,255,255,0) 22%),radial-gradient(circle at 50% 60%,var(--c) 0 55%,var(--c2,var(--c)) 100%);
+  box-shadow:inset 0 -10px 0 rgba(0,0,0,.14),0 10px 20px rgba(0,0,0,.18);
+  font:900 calc(var(--bs)*.52)/1 var(--kid);text-shadow:0 3px 0 rgba(0,0,0,.28),0 0 3px rgba(0,0,0,.35);
+  animation:popIn .45s var(--d) both,bob 2.8s ease-in-out calc(var(--d) + .45s) infinite;touch-action:none;transition:opacity .6s .35s,filter .6s .35s}
+.bubble span{display:block;transform:translateY(-3%)}
+.bubble.wrong{animation:wobble .55s ease-in-out;opacity:.3;filter:grayscale(.7);pointer-events:none}
+.bubble.right{animation:rightPop .7s ease-out both;box-shadow:0 0 0 8px #fff59d,0 0 40px 14px #fff59d;z-index:2}
+.bubble.dim{opacity:.25;transition:opacity .3s}
+@keyframes popIn{0%{transform:scale(0)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes wobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-7deg)}80%{transform:rotate(4deg)}}
+@keyframes rightPop{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1.15)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes starPop{0%{transform:scale(0) rotate(-90deg)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+@media (orientation:portrait){
+  #quiz{grid-template-columns:1fr;grid-template-rows:46% 54%;padding-top:92px}
+  #qVolWrap{height:min(34vh,62vw)}
+  #meter{height:min(28vh,50vw)}
+  #bubbles{--bs:max(96px,min(22vmin,calc((100vw - 110px)/var(--n,3))))}
+}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:3vmin}
+.overlay.show{display:flex}
+#start{z-index:75;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.55),rgba(255,255,255,.1) 70%);cursor:pointer}
+#title{font:900 clamp(38px,8vmin,86px)/1 var(--kid);letter-spacing:2px;text-align:center;padding:0 16px}
+#title span{display:inline-block;color:var(--c);-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:0 6px 0 rgba(0,0,0,.15);animation:bob 2.4s ease-in-out infinite}
+#startVol{height:min(40vh,50vw)}
+.bigbtn{width:150px;height:150px;border-radius:50%;border:8px solid #fff;display:grid;place-items:center;padding:0;
+  box-shadow:0 10px 24px rgba(0,0,0,.22),inset 0 -12px 0 rgba(0,0,0,.14)}
+.bigbtn svg{width:58%;height:58%}
+.bigbtn.play{background:var(--green);animation:pulse 1.4s ease-in-out infinite}
+.bigbtn.puz{background:var(--orange);width:120px;height:120px}
+#celebrate{z-index:40}
+#celVol{height:min(62vh,62vw)}
+#reward{background:rgba(255,255,255,.45);z-index:60}
+#rStars{display:flex;flex-wrap:wrap;justify-content:center;gap:1.2vmin;max-width:92vw}
+.rstar{width:clamp(40px,8vmin,78px);height:clamp(40px,8vmin,78px);transform:scale(0)}
+.rstar.on{animation:starPop .5s ease-out forwards}
+.rstar svg{width:100%;height:100%}
+#rVol{height:min(38vh,44vw)}
+#rBtns{display:flex;gap:5vmin;align-items:center;opacity:0;transform:scale(.6);transition:all .4s;pointer-events:none}
+#reward.ready #rBtns{opacity:1;transform:scale(1);pointer-events:auto}
+
+/* ---------- fx canvas ---------- */
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
+
+/* ---------- parent settings ---------- */
+#settings{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(40,20,60,.45);padding:16px}
+#settings.show{display:flex}
+#setBox{background:#fff;border-radius:22px;max-width:640px;width:100%;max-height:92vh;overflow:auto;padding:20px 22px;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#333;box-shadow:0 20px 50px rgba(0,0,0,.3);touch-action:pan-y}
+#setBox h2{margin:0 0 4px;font-size:22px;color:#6a3fb5}
+#setBox .hint{margin:0 0 14px;font-size:13px;color:#777}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #eee;flex-wrap:wrap}
+.srow label{font-weight:600;font-size:15px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:2px solid #d9cdef;background:#faf7ff;border-radius:12px;padding:9px 13px;font:600 14px system-ui,sans-serif;color:#553b8a;min-height:44px}
+.seg button[aria-pressed="true"]{background:#9b5de5;border-color:#9b5de5;color:#fff}
+.sacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:flex-end}
+.sacts button{border:none;border-radius:12px;padding:11px 16px;font:700 14px system-ui,sans-serif;min-height:46px;background:#eee;color:#333}
+.sacts .done{background:#2ec4b6;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- shared SVG definitions (kept rendered, not display:none, so gradients work) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs id="gdefs"></defs>
+</svg>
+
+<svg id="bg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+
+<svg id="bird" viewBox="0 0 70 44" aria-hidden="true">
+  <path class="wing" d="M28,20 Q20,2 6,6 Q18,14 26,24Z" fill="#ff8fb1" stroke="#b83d6b" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="34" cy="26" rx="20" ry="13" fill="#ff5d8f" stroke="#b83d6b" stroke-width="3"/>
+  <circle cx="50" cy="20" r="10" fill="#ff5d8f" stroke="#b83d6b" stroke-width="3"/>
+  <path d="M58,19 L67,22 L58,25Z" fill="#ffbe0b" stroke="#c98a00" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="52" cy="18" r="3" fill="#2b2140"/>
+  <path class="wing" d="M36,22 Q34,4 20,4 Q28,14 30,26Z" fill="#ffb3cb" stroke="#b83d6b" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>
+
+<svg id="dino" viewBox="0 0 170 160" aria-hidden="true">
+  <path d="M36,112 Q4,112 8,78 Q22,100 50,96Z" fill="#b388ff" stroke="#5b3a9e" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M46,76 l8,-16 l8,14 M62,70 l9,-16 l7,15 M78,68 l9,-15 l6,15" fill="#ffb347" stroke="#c96f1c" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="50" y="118" width="20" height="30" rx="9" fill="#b388ff" stroke="#5b3a9e" stroke-width="5"/>
+  <rect x="88" y="118" width="20" height="30" rx="9" fill="#b388ff" stroke="#5b3a9e" stroke-width="5"/>
+  <ellipse cx="78" cy="104" rx="44" ry="34" fill="#b388ff" stroke="#5b3a9e" stroke-width="5"/>
+  <ellipse cx="88" cy="112" rx="25" ry="20" fill="#e8dbff"/>
+  <ellipse cx="124" cy="60" rx="34" ry="28" fill="#b388ff" stroke="#5b3a9e" stroke-width="5"/>
+  <path d="M108,100 q14,-4 18,-16" stroke="#5b3a9e" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <circle cx="130" cy="52" r="10" fill="#fff" stroke="#5b3a9e" stroke-width="3"/>
+  <circle cx="133" cy="53" r="5.5" fill="#2b2140"/><circle cx="135" cy="50" r="2" fill="#fff"/>
+  <path d="M120,72 Q136,82 152,68" stroke="#5b3a9e" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <circle cx="112" cy="68" r="7" fill="#ff8fb1" opacity=".7"/>
+</svg>
+
+<!-- PUZZLE -->
+<div id="puzzle" class="hidden">
+  <div id="board"><div id="guideImg"></div><div id="cells"></div><div id="full"></div></div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="hidden">
+  <div id="volArea">
+    <div id="qVolWrap" class="vwrap"></div>
+    <div id="meter"></div>
+  </div>
+  <div id="qArea">
+    <div id="qTop">
+      <button id="repeat" aria-label="Say it again">
+        <svg viewBox="0 0 64 64"><path d="M8,24 H20 L34,11 V53 L20,40 H8Z" fill="#fff" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M42,23 Q49,32 42,41" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M48,15 Q60,32 48,49" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <div id="problem" style="display:none"></div>
+    </div>
+    <div id="bubbles"></div>
+  </div>
+</div>
+<div id="prog" class="hidden"></div>
+
+<!-- CELEBRATION after puzzle -->
+<div id="celebrate" class="overlay"><div id="celVol" class="vwrap"></div></div>
+
+<!-- REWARD -->
+<div id="reward" class="overlay">
+  <div id="rStars"></div>
+  <div id="rVol" class="vwrap dance"></div>
+  <div id="rBtns">
+    <button id="againBtn" class="bigbtn play" aria-label="Play again"><svg viewBox="0 0 64 64"><path d="M20,12 L52,32 L20,52Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg></button>
+    <button id="puzBtn" class="bigbtn puz" aria-label="New puzzle"><svg viewBox="0 0 64 64"><path d="M10,18 H24 a7,7 0 1 1 14,0 H52 V32 a7,7 0 1 1 0,14 V58 H10Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></button>
+  </div>
+</div>
+
+<!-- START -->
+<div id="start" class="overlay show">
+  <div id="title"></div>
+  <div id="startVol" class="vwrap"></div>
+  <button id="startBtn" class="bigbtn play" aria-label="Play"><svg viewBox="0 0 64 64"><path d="M20,12 L52,32 L20,52Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg></button>
+</div>
+
+<canvas id="fx"></canvas>
+
+<button id="mute" class="hudbtn" aria-label="Music on or off">
+  <svg viewBox="0 0 64 64"><path d="M24,46 V16 L50,9 V39" stroke="#fff" stroke-width="6" fill="none" stroke-linejoin="round"/>
+  <circle cx="17" cy="46" r="9" fill="#fff"/><circle cx="43" cy="40" r="9" fill="#fff"/>
+  <path class="slash" d="M10,10 L54,54" stroke="#ff5d8f" stroke-width="7" stroke-linecap="round"/></svg>
+</button>
+<button id="gear" class="hudbtn" aria-label="Grown-up settings (press and hold)">
+  <svg viewBox="0 0 64 64">
+    <g transform="translate(32,32)" fill="#7b6a9a">
+      <rect x="-5" y="-19" width="10" height="38" rx="3"/><rect x="-5" y="-19" width="10" height="38" rx="3" transform="rotate(45)"/>
+      <rect x="-5" y="-19" width="10" height="38" rx="3" transform="rotate(90)"/><rect x="-5" y="-19" width="10" height="38" rx="3" transform="rotate(135)"/>
+      <circle r="14"/><circle r="6" fill="#fff"/>
+    </g>
+    <circle class="ring" cx="32" cy="32" r="28" fill="none" stroke="#9b5de5" stroke-width="5" stroke-linecap="round" transform="rotate(-90 32 32)"/>
+  </svg>
+</button>
+
+<!-- PARENT SETTINGS -->
+<div id="settings">
+  <div id="setBox" role="dialog" aria-label="Grown-up settings">
+    <h2>Grown-up settings</h2>
+    <p class="hint">Settings are kept until this browser tab is closed.</p>
+    <div id="setRows"></div>
+    <div class="sacts">
+      <button id="sFull">Full screen</button>
+      <button id="sPuzzle">New puzzle</button>
+      <button id="sSkip">Skip to questions</button>
+      <button id="sDone" class="done">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const rand = (a, b) => a + Math.random() * (b - a);
+const randi = (a, b) => Math.floor(rand(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// Draw from a shuffled deck so phrases rotate without quick repeats
+function deck(arr) { let d = [], last = null; return () => { if (!d.length) { d = shuffle(arr); if (d[0] === last && d.length > 1) d.push(d.shift()); } last = d.shift(); return last; }; }
+
+/* ================= SETTINGS ================= */
+const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, speed: 'slow', music: true, voice: true };
+const S = Object.assign({}, DEFAULTS);
+try { const saved = JSON.parse(sessionStorage.getItem('vf-settings')); if (saved) Object.assign(S, saved); } catch (e) {}
+const saveS = () => { try { sessionStorage.setItem('vf-settings', JSON.stringify(S)); } catch (e) {} };
+const SPEED = { slow: 18, medium: 12, fast: 8 }; // seconds until eruption
+
+/* ================= PHRASES ================= */
+const praise = deck(["Good job!", "You did great!", "Wow, you're so smart!", "High five!", "Awesome!", "You got it!", "Super duper!", "Fantastic!", "Way to go!", "Yay, you did it!", "Amazing!", "Hooray!", "That's right!", "You're a star!", "Brilliant!"]);
+const encourage = deck(["Oops, try again!", "Almost! Try another one!", "Good try! Pick another one!", "Hmm, try again!", "Ooh, so close! Try again!"]);
+const cheer = deck(["Nice!", "You got it!", "Great!", "Yay!", "Perfect!", "Good one!", "Wow!"]);
+const eruptLines = deck(["Wheee! Look at all that lava! Let's try again!", "Kaboom! That was so silly! Let's try again!", "Whoa, lava everywhere! Let's try again!"]);
+const rewardLines = ["Hooray! You answered ten questions! You're a volcano superstar!", "Wow! Ten stars! The volcano is so happy! Let's dance!"];
+
+/* ================= ART ================= */
+function volcanoDefs() {
+  return `<linearGradient id="vBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffac66"/><stop offset="1" stop-color="#e2683c"/></linearGradient>
+<linearGradient id="vLava" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset="1" stop-color="#ff4f7b"/></linearGradient>
+<linearGradient id="vFlow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset=".45" stop-color="#ff9f1c"/><stop offset="1" stop-color="#f0441c"/></linearGradient>
+<symbol id="dino" viewBox="0 0 64 56">
+ <path d="M7,40 Q1,31 10,30 L19,33 Q21,19 35,17 Q39,5 49,6 Q60,8 58,18 Q56,24 48,24 L46,30 Q53,43 44,48 L43,54 L36,54 L36,48 L27,48 L27,54 L20,54 L20,46 Q11,46 7,40Z" fill="currentColor" stroke="#2b2b4a" stroke-width="2.5" stroke-linejoin="round"/>
+ <path d="M24,21 l3,-6 l3,5 M31,18 l3,-6 l3,5" fill="#ffb347" stroke="#2b2b4a" stroke-width="1.6" stroke-linejoin="round"/>
+ <circle cx="51" cy="12" r="3.4" fill="#fff"/><circle cx="52" cy="12.4" r="1.8" fill="#222"/>
+ <path d="M49,19 Q53,21.5 57,18" stroke="#2b2b4a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</symbol>
+<symbol id="star" viewBox="0 0 64 64"><path d="M32,5 L40,23 L59,24 L44,37 L49,57 L32,46 L15,57 L20,37 L5,24 L24,23Z" fill="currentColor" stroke="#e08a00" stroke-width="4" stroke-linejoin="round"/></symbol>`;
+}
+function volcanoBody() {
+  return `<ellipse cx="200" cy="360" rx="178" ry="14" fill="#000" opacity=".12"/>
+<path d="M30,355 C70,300 95,190 138,112 C148,95 158,88 172,88 L228,88 C242,88 252,95 262,112 C305,190 330,300 370,355 Z" fill="url(#vBody)" stroke="#8a3d24" stroke-width="7" stroke-linejoin="round"/>
+<ellipse cx="108" cy="312" rx="17" ry="9" fill="#c9582f" opacity=".45"/><ellipse cx="300" cy="300" rx="13" ry="7" fill="#c9582f" opacity=".45"/><ellipse cx="272" cy="170" rx="9" ry="6" fill="#c9582f" opacity=".4"/>
+<path d="M160,92 C162,120 172,128 176,110 C180,138 192,140 196,112 C200,132 212,134 214,110 C218,128 232,126 240,92 Z" fill="url(#vLava)" stroke="#8a3d24" stroke-width="5" stroke-linejoin="round"/>
+<ellipse cx="200" cy="90" rx="42" ry="11" fill="#ff6b6b" stroke="#8a3d24" stroke-width="6"/>
+<ellipse cx="200" cy="88" rx="29" ry="5.5" fill="#ffe066"/>
+<path d="M30,355 Q45,335 62,350 Q78,330 96,350 Q112,332 130,352 Q150,334 168,352 Q186,334 204,352 Q222,334 240,352 Q258,334 276,352 Q294,332 312,350 Q330,332 348,350 Q360,338 370,355 Z" fill="#5ccf6a" stroke="#2f8a44" stroke-width="5" stroke-linejoin="round"/>
+<circle cx="128" cy="258" r="20" fill="#ff7aa8" opacity=".55"/><circle cx="272" cy="258" r="20" fill="#ff7aa8" opacity=".55"/>`;
+}
+// Lava that pours over the top and runs down both sides during an eruption
+const LAVA_FLOW = `<g class="lavaflow" fill="url(#vFlow)" stroke="#b8321f" stroke-width="5" stroke-linejoin="round">
+<path d="M150,118 C126,170 106,215 90,258 C80,286 70,312 62,336 Q72,348 84,334 C94,306 104,280 112,256 C124,220 140,176 168,122 Z"/>
+<path d="M250,118 C274,170 294,215 310,258 C320,286 330,312 338,336 Q328,348 316,334 C306,306 296,280 288,256 C276,220 260,176 232,122 Z"/>
+<path d="M160,92 C150,110 142,124 134,140 Q138,172 150,158 Q156,190 170,166 Q180,196 192,170 Q204,200 214,168 Q226,194 236,164 Q248,186 256,154 Q266,166 266,140 C258,124 250,110 240,92 Z"/>
+</g>`;
+function volcanoFace() {
+  const ink = '#5a2a1c';
+  return `<g class="f-open"><g class="eyes">
+ <ellipse cx="160" cy="205" rx="26" ry="31" fill="#fff" stroke="${ink}" stroke-width="5"/>
+ <ellipse cx="240" cy="205" rx="26" ry="31" fill="#fff" stroke="${ink}" stroke-width="5"/>
+ <g class="pupils"><circle cx="164" cy="211" r="14" fill="#3b2140"/><circle cx="244" cy="211" r="14" fill="#3b2140"/><circle cx="169" cy="204" r="5" fill="#fff"/><circle cx="249" cy="204" r="5" fill="#fff"/></g>
+</g></g>
+<g class="f-brow" stroke="${ink}" stroke-width="7" stroke-linecap="round" fill="none"><path d="M136,166 Q158,162 180,150"/><path d="M220,150 Q242,162 264,166"/></g>
+<g class="f-sleep" stroke="${ink}" stroke-width="6" stroke-linecap="round" fill="none"><path d="M138,206 Q160,224 182,206"/><path d="M218,206 Q240,224 262,206"/></g>
+<g class="f-gig" stroke="${ink}" stroke-width="7" stroke-linecap="round" fill="none"><path d="M138,214 Q160,186 182,214"/><path d="M218,214 Q240,186 262,214"/></g>
+<path class="m-smile" d="M172,262 Q200,290 228,262" stroke="${ink}" stroke-width="7" stroke-linecap="round" fill="none"/>
+<g class="m-open"><path d="M166,256 Q200,330 234,256 Z" fill="#7a2336" stroke="${ink}" stroke-width="6" stroke-linejoin="round"/><path d="M185,280 Q200,272 215,280 Q210,289 200,289 Q190,289 185,280Z" fill="#ff6f91"/></g>
+<ellipse class="m-o" cx="200" cy="272" rx="12" ry="15" fill="#7a2336" stroke="${ink}" stroke-width="5"/>
+<path class="m-wavy" d="M168,274 Q178,262 188,274 Q198,286 208,274 Q218,262 230,274" stroke="${ink}" stroke-width="6" stroke-linecap="round" fill="none"/>
+<path class="sweat" d="M292,148 Q304,168 292,178 Q280,168 292,148Z" fill="#8fe6ff" stroke="#2a8fb8" stroke-width="3"/>`;
+}
+const volcanoSVG = face => `<svg class="vol face-${face}" viewBox="0 0 400 380" aria-hidden="true">${volcanoBody()}${LAVA_FLOW}${volcanoFace()}</svg>`;
+function setFace(svg, face) {
+  ['sleep', 'calm', 'happy', 'nervous', 'worried', 'giggle'].forEach(f => svg.classList.remove('face-' + f));
+  svg.classList.add('face-' + face);
+}
+
+function palm(x, y, s = 1, flip = false) {
+  const leaf = (d) => `<path d="${d}" fill="#36b24a" stroke="#1f7a34" stroke-width="4" stroke-linejoin="round"/>`;
+  return `<g transform="translate(${x},${y}) scale(${flip ? -s : s},${s})">
+<path d="M0,0 C6,-60 22,-120 14,-185" stroke="#8a5a34" stroke-width="24" fill="none" stroke-linecap="round"/>
+<path d="M0,0 C6,-60 22,-120 14,-185" stroke="#b07a48" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="10 12"/>
+<g transform="translate(14,-188)">
+${leaf('M0,0 C40,-10 80,20 100,60 C70,30 35,15 0,0Z')}${leaf('M0,0 C-40,-10 -80,20 -100,60 C-70,30 -35,15 0,0Z')}
+${leaf('M0,0 C30,-40 90,-40 120,5 C80,-15 40,-12 0,0Z')}${leaf('M0,0 C-30,-40 -90,-40 -120,5 C-80,-15 -40,-12 0,0Z')}
+${leaf('M0,0 C20,-55 60,-85 100,-80 C60,-60 30,-35 0,0Z')}${leaf('M0,0 C-20,-55 -60,-85 -100,-80 C-60,-60 -30,-35 0,0Z')}
+<circle cx="-8" cy="8" r="10" fill="#7a4a24"/><circle cx="10" cy="10" r="10" fill="#7a4a24"/>
+</g></g>`;
+}
+const cloud = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})" fill="#fff"><circle cx="0" cy="0" r="38"/><circle cx="44" cy="-18" r="48"/><circle cx="92" cy="-4" r="40"/><circle cx="128" cy="10" r="28"/><rect x="-10" y="0" width="150" height="38" rx="19"/></g>`;
+function sun(x, y, s) {
+  let rays = ''; for (let i = 0; i < 12; i++) rays += `<rect x="-8" y="-120" width="16" height="36" rx="8" fill="#ffd93d" transform="rotate(${i * 30})"/>`;
+  return `<g transform="translate(${x},${y}) scale(${s})"><g class="rays">${rays}</g>
+<circle r="72" fill="#ffd93d" stroke="#f4a100" stroke-width="7"/>
+<circle cx="-24" cy="-10" r="8" fill="#5a2a1c"/><circle cx="24" cy="-10" r="8" fill="#5a2a1c"/>
+<path d="M-26,18 Q0,42 26,18" stroke="#5a2a1c" stroke-width="7" fill="none" stroke-linecap="round"/>
+<circle cx="-46" cy="16" r="11" fill="#ff9f7a" opacity=".6"/><circle cx="46" cy="16" r="11" fill="#ff9f7a" opacity=".6"/></g>`;
+}
+const flower = (x, y, c) => `<g transform="translate(${x},${y})"><circle cx="-9" cy="0" r="8" fill="${c}"/><circle cx="9" cy="0" r="8" fill="${c}"/><circle cx="0" cy="-9" r="8" fill="${c}"/><circle cx="0" cy="9" r="8" fill="${c}"/><circle r="6" fill="#ffd93d"/></g>`;
+
+function sceneSVG() {
+  let clouds = '';
+  [[120, .9, 0], [230, .7, -25], [90, .6, -45], [300, .8, -60]].forEach(([y, s, d]) => {
+    clouds += `<g class="drift" style="animation-delay:${d}s;animation-duration:${60 + s * 30}s">${cloud(0, y, s)}</g>`;
+  });
+  return `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc8f5"/><stop offset=".7" stop-color="#bdeeff"/><stop offset="1" stop-color="#e8fbff"/></linearGradient>
+<linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#48d0e0"/><stop offset="1" stop-color="#2aa3c9"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#sky)"/>
+${sun(1390, 160, 1)}${clouds}
+<path d="M0,690 Q200,670 400,690 T800,690 T1200,690 T1600,690 V1000 H0Z" fill="url(#sea)"/>
+<path d="M0,760 Q250,700 520,760 T1060,750 T1600,760 V1000 H0Z" fill="#a6e77e"/>
+<path d="M0,820 Q300,770 640,820 T1300,810 T1600,815 V1000 H0Z" fill="#7ed957" stroke="#5bb53d" stroke-width="6"/>
+${palm(130, 850, 1.25)}${palm(1480, 860, 1.15, true)}${palm(300, 830, .8, true)}
+${flower(420, 880, '#ff5d8f')}${flower(470, 905, '#9b5de5')}${flower(1180, 890, '#ff8c42')}${flower(1240, 915, '#ff5d8f')}${flower(820, 930, '#3a86ff')}${flower(60, 940, '#ffbe0b')}`;
+}
+
+// The puzzle picture: same volcano, asleep, in a little island scene
+function pictureSVG() {
+  const ink = '#5a2a1c';
+  const sleepFace = `<g stroke="${ink}" stroke-width="6" stroke-linecap="round" fill="none"><path d="M138,206 Q160,224 182,206"/><path d="M218,206 Q240,224 262,206"/><path d="M172,262 Q200,290 228,262" stroke-width="7"/></g>`;
+  const z = (x, y, s) => `<path transform="translate(${x},${y}) scale(${s})" d="M0,0 H22 L0,24 H22" stroke="#9b5de5" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" preserveAspectRatio="none">
+<defs>${volcanoDefs()}<linearGradient id="psky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc8f5"/><stop offset="1" stop-color="#d4f5ff"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#psky)"/>
+${sun(690, 95, .7)}${cloud(40, 90, .8)}${cloud(470, 60, .55)}
+<path d="M0,455 Q200,440 400,455 T800,450 V600 H0Z" fill="#3fc1d6"/>
+<path d="M0,515 Q200,490 400,515 T800,510 V600 H0Z" fill="#7ed957" stroke="#4fae3a" stroke-width="5"/>
+${palm(80, 560, .95)}${palm(730, 560, .8, true)}
+<g transform="translate(200,172)">${volcanoBody()}${sleepFace}</g>
+${z(560, 190, 1)}${z(600, 145, .8)}${z(632, 108, .6)}
+${flower(640, 565, '#ff5d8f')}${flower(680, 580, '#9b5de5')}${flower(170, 578, '#ffbe0b')}${flower(560, 585, '#3a86ff')}
+<g transform="translate(40,300) scale(1.3)" color="#6bcb3a"><use href="#dino" width="64" height="56"/></g>
+</svg>`;
+}
+
+const meterSVG = `<svg viewBox="0 0 90 420" aria-hidden="true">
+<defs><linearGradient id="lavaG" gradientUnits="userSpaceOnUse" x1="0" y1="400" x2="0" y2="20"><stop offset="0" stop-color="#ffd93d"/><stop offset=".35" stop-color="#ff8c42"/><stop offset=".65" stop-color="#ff5d8f"/><stop offset="1" stop-color="#9b5de5"/></linearGradient>
+<clipPath id="tubeClip"><rect x="25" y="19" width="40" height="330" rx="20"/><circle cx="45" cy="370" r="37"/></clipPath></defs>
+<rect x="22" y="16" width="46" height="330" rx="23" fill="#fff" stroke="#5a2a1c" stroke-width="6"/>
+<circle cx="45" cy="370" r="40" fill="#fff" stroke="#5a2a1c" stroke-width="6"/>
+<rect x="25" y="318" width="40" height="30" fill="#fff"/>
+<g clip-path="url(#tubeClip)">
+  <circle cx="45" cy="370" r="37" fill="#ffd93d"/>
+  <rect id="lavaFill" x="20" y="345" width="50" height="75" fill="url(#lavaG)"/>
+</g>
+<path d="M36,40 V300" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+<circle cx="36" cy="366" r="4" fill="#5a2a1c"/><circle cx="54" cy="366" r="4" fill="#5a2a1c"/>
+<path d="M36,380 Q45,388 54,380" stroke="#5a2a1c" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>`;
+const starSVG = c => `<svg viewBox="0 0 64 64" style="color:${c}"><use href="#star"/></svg>`;
+
+/* ================= BUILD STATIC DOM ================= */
+$('#gdefs').innerHTML = volcanoDefs();
+$('#bg').innerHTML = sceneSVG();
+$('#qVolWrap').innerHTML = volcanoSVG('calm');
+$('#celVol').innerHTML = volcanoSVG('sleep');
+$('#rVol').innerHTML = volcanoSVG('happy');
+$('#startVol').innerHTML = volcanoSVG('sleep');
+$('#meter').innerHTML = meterSVG;
+const TITLE_COLORS = ['#ff5d8f', '#ff8c42', '#ffbe0b', '#6bcb3a', '#2ec4b6', '#3a86ff', '#9b5de5'];
+$('#title').innerHTML = 'Volcano Friends'.split('').map((ch, i) => ch === ' ' ? '&nbsp;' : `<span style="--c:${TITLE_COLORS[i % 7]};animation-delay:${i * -.15}s">${ch}</span>`).join('');
+const qVol = $('#qVolWrap svg');
+const lavaFill = $('#lavaFill');
+const dino = $('#dino');
+const PICTURE = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(pictureSVG()) + '")';
+$('#guideImg').style.backgroundImage = PICTURE;
+$('#full').style.backgroundImage = PICTURE;
+
+/* ================= AUDIO (Web Audio, no files) ================= */
+const A = { ctx: null, master: null, music: null, sfx: null, noise: null, muted: false, musicOn: false, duck: false, step: 0, nextT: 0 };
+A.init = function () {
+  if (A.ctx) { if (A.ctx.state !== 'running' && !document.hidden) A.ctx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  const c = A.ctx = new AC();
+  const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(c.destination);
+  A.master = c.createGain(); A.master.connect(comp);
+  A.music = c.createGain(); A.music.gain.value = 0; A.music.connect(A.master);
+  A.sfx = c.createGain(); A.sfx.gain.value = .9; A.sfx.connect(A.master);
+  const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  A.noise = b;
+  setInterval(A.schedule, 40);
+  A.applyMute();
+};
+const now = () => A.ctx.currentTime;
+const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+function note(t, f, dur, o = {}) {
+  const c = A.ctx; if (!c) return;
+  const osc = c.createOscillator(), g = c.createGain();
+  osc.type = o.type || 'sine';
+  osc.frequency.setValueAtTime(f, t);
+  if (o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide, t + (o.slideT || dur));
+  const v = o.vol || .2, at = o.attack || .008;
+  g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(v, t + at);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  osc.connect(g); g.connect(o.dest || A.sfx);
+  osc.start(t); osc.stop(t + dur + .05);
+  return osc;
+}
+function noiseHit(t, dur, o = {}) {
+  const c = A.ctx; if (!c) return;
+  const s = c.createBufferSource(); s.buffer = A.noise;
+  const f = c.createBiquadFilter(); f.type = o.ftype || 'highpass'; f.frequency.setValueAtTime(o.freq || 5000, t);
+  if (o.sweep) f.frequency.exponentialRampToValueAtTime(o.sweep, t + dur);
+  f.Q.value = o.q || 1;
+  const g = c.createGain(); g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(o.vol || .1, t + (o.attack || .005));
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(o.dest || A.sfx);
+  s.start(t, Math.random() * .4); s.stop(t + dur + .05);
+}
+function bell(t, f, dur, vol) { note(t, f, dur, { vol }); note(t, f * 2.01, dur * .5, { vol: vol * .3 }); note(t, f * 3.02, dur * .25, { vol: vol * .12 }); }
+
+const SFX = {
+  tap() { if (!A.ctx) return; note(now(), 660, .12, { slide: 990, vol: .18 }); },
+  pick() { if (!A.ctx) return; note(now(), 440, .12, { type: 'triangle', slide: 760, vol: .16 }); },
+  snap() {
+    if (!A.ctx) return; const t = now();
+    note(t, 900, .14, { slide: 260, vol: .35 }); noiseHit(t, .04, { freq: 2500, vol: .12 });
+    bell(t + .06, mf(84), .4, .12);
+  },
+  chime() { if (!A.ctx) return; const t = now(); [72, 76, 79, 84].forEach((m, i) => bell(t + i * .09, mf(m), .9, .17)); },
+  soft() { if (!A.ctx) return; note(now(), 320, .16, { slide: 480, vol: .12 }); },
+  wobble() {
+    if (!A.ctx) return; const t = now(), c = A.ctx;
+    const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle';
+    o.frequency.setValueAtTime(130, t);
+    for (let i = 1; i <= 7; i++) o.frequency.linearRampToValueAtTime(i % 2 ? 165 : 110, t + i * .07);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .55);
+    o.connect(g); g.connect(A.sfx); o.start(t); o.stop(t + .6);
+  },
+  boing() { if (!A.ctx) return; note(now(), 180, .45, { type: 'triangle', slide: 640, vol: .22 }); },
+  fanfare() {
+    if (!A.ctx) return; const t = now();
+    [[60, 0], [64, .12], [67, .24], [72, .36], [67, .52], [72, .64]].forEach(([m, d]) => { note(t + d, mf(m), .2, { type: 'square', vol: .05 }); bell(t + d, mf(m + 12), .3, .1); });
+    [72, 76, 79].forEach(m => { note(t + .82, mf(m), 1, { type: 'triangle', vol: .09 }); bell(t + .82, mf(m + 12), 1, .06); });
+  },
+  star(i) { if (!A.ctx) return; bell(now(), mf(72 + [0, 2, 4, 5, 7, 9, 11, 12, 14, 16][i % 10]), .5, .15); },
+  giggle(t0) { for (let i = 0; i < 8; i++) note(t0 + i * .11, i % 2 ? 1040 : 860, .09, { type: 'triangle', vol: .09, slide: i % 2 ? 940 : 990 }); },
+  erupt() {
+    if (!A.ctx) return; const t = now();
+    noiseHit(t, 1, { ftype: 'bandpass', freq: 300, sweep: 3000, vol: .22, attack: .15, q: 1.5 });
+    note(t, 200, .8, { type: 'triangle', slide: 1100, vol: .12 });
+    for (let i = 0; i < 16; i++) note(t + .5 + i * .14 + rand(0, .07), rand(220, 480), .14, { slide: 90, vol: .2 }); // lava bloops
+    SFX.giggle(t + 1.3);
+  }
+};
+
+// Background music: a bouncy 8-bar loop in C major
+const BPM = 116, ST = 60 / BPM / 2;
+const MEL = [76, 0, 79, 76, 72, 0, 74, 76, 77, 0, 81, 77, 72, 0, 74, 77, 79, 0, 77, 76, 74, 0, 71, 74, 72, 76, 79, 84, 79, 0, 76, 0,
+  79, 0, 76, 79, 84, 0, 79, 76, 81, 0, 77, 81, 84, 0, 81, 77, 79, 77, 76, 74, 71, 74, 79, 0, 72, 0, 76, 0, 72, 0, 0, 0];
+const ROOTS = [48, 53, 43, 48, 48, 53, 43, 48];
+const CHORD = { 48: [64, 67, 72], 53: [65, 69, 72], 43: [62, 67, 71] };
+A.schedule = function () {
+  if (!A.ctx || !A.musicOn || A.ctx.state !== 'running') return;
+  const c = A.ctx;
+  if (A.nextT < c.currentTime) A.nextT = c.currentTime + .05;
+  while (A.nextT < c.currentTime + .25) { A.playStep(A.step, A.nextT); A.nextT += ST; A.step = (A.step + 1) % 64; }
+};
+A.playStep = function (s, t) {
+  const bar = Math.floor(s / 8), b = s % 8, root = ROOTS[bar], d = A.music;
+  const m = MEL[s];
+  if (m) { note(t, mf(m), .32, { vol: .16, dest: d }); note(t, mf(m) * 4, .07, { vol: .025, dest: d }); }
+  if (b % 2 === 0) note(t, mf([root, root + 7, root + 12, root + 7][b / 2]), .24, { type: 'triangle', vol: .28, dest: d });
+  if (b === 2 || b === 6) CHORD[root].forEach(x => note(t, mf(x), .14, { type: 'triangle', vol: .045, dest: d }));
+  if (b % 2 === 1) noiseHit(t, .035, { freq: 7000, vol: .03, dest: d });
+};
+A.setMusic = function (on) {
+  if (!A.ctx) return;
+  A.musicOn = on;
+  if (on) A.nextT = A.ctx.currentTime + .08;
+  A.music.gain.cancelScheduledValues(A.ctx.currentTime);
+  A.music.gain.setTargetAtTime(on ? (A.duck ? .15 : .5) : 0, A.ctx.currentTime, .15);
+};
+A.setDuck = function (d) { A.duck = d; if (A.ctx && A.musicOn) A.music.gain.setTargetAtTime(d ? .15 : .5, A.ctx.currentTime, .12); };
+A.applyMute = function () { if (A.ctx) A.master.gain.setTargetAtTime(A.muted ? 0 : 1, A.ctx.currentTime, .05); };
+
+/* ================= VOICE (Web Speech API) ================= */
+const V = { voice: null, speaking: false, cur: 0, keep: null };
+const hasTTS = 'speechSynthesis' in window;
+V.pick = function () {
+  if (!hasTTS) return;
+  const vs = speechSynthesis.getVoices(); if (!vs.length) return;
+  const en = vs.filter(v => /^en([-_]|$)/i.test(v.lang)); const pool = en.length ? en : vs;
+  const prefs = ['Ana Online', 'Aria Online', 'Jenny Online', 'Samantha', 'Google US English', 'Karen', 'Moira', 'Tessa', 'Zira', 'Susan', 'Female', 'Aria', 'Jenny'];
+  for (const p of prefs) { const v = pool.find(v => v.name.includes(p)); if (v) { V.voice = v; return; } }
+  V.voice = pool.find(v => /en-US/i.test(v.lang)) || pool[0];
+};
+if (hasTTS) { V.pick(); speechSynthesis.onvoiceschanged = V.pick; }
+V.say = function (text) {
+  return new Promise(res => {
+    const id = ++V.cur;
+    $('#repeat').classList.remove('talking');
+    if (!S.voice || !hasTTS) { setTimeout(res, 500); return; }
+    let done = false, to = 0;
+    const fin = () => {
+      if (done) return; done = true; clearTimeout(to);
+      if (id === V.cur) { V.speaking = false; A.setDuck(false); $('#repeat').classList.remove('talking'); }
+      res();
+    };
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    if (V.voice) { u.voice = V.voice; u.lang = V.voice.lang; } else u.lang = 'en-US';
+    u.rate = .86; u.pitch = 1.3; u.volume = 1;
+    u.onstart = () => { if (id === V.cur) { V.speaking = true; A.setDuck(true); if (G.state === 'quiz') $('#repeat').classList.add('talking'); } };
+    u.onend = fin; u.onerror = fin;
+    V.keep = u; // keep a reference so the browser does not drop the end event
+    to = setTimeout(fin, 2000 + text.length * 95);
+    V.speaking = true;
+    speechSynthesis.speak(u);
+  });
+};
+V.stop = () => { V.cur++; V.speaking = false; if (hasTTS) speechSynthesis.cancel(); A.setDuck(false); $('#repeat').classList.remove('talking'); };
+
+/* ================= FX (canvas particles) ================= */
+const fx = $('#fx'), fc = fx.getContext('2d');
+let FW = 0, FH = 0;
+const parts = [];
+function sizeFx() { const dpr = Math.min(2, window.devicePixelRatio || 1); FW = innerWidth; FH = innerHeight; fx.width = FW * dpr; fx.height = FH * dpr; fc.setTransform(dpr, 0, 0, dpr, 0, 0); }
+const CANDY = ['#ff5d8f', '#ffbe0b', '#ff8c42', '#9b5de5', '#3a86ff', '#2ec4b6', '#8ac926', '#ff99c8', '#ffe66d', '#a0c4ff'];
+function addP(p) { if (parts.length > 650) parts.shift(); parts.push(Object.assign({ x: 0, y: 0, vx: 0, vy: 0, g: 0, life: 1, age: 0, size: 8, color: '#fff', shape: 'circle', rot: 0, vr: 0, bounce: 0, drag: 0, wob: 0 }, p)); }
+function sparkle(x, y, n = 14) {
+  for (let i = 0; i < n; i++) { const a = rand(0, Math.PI * 2), sp = rand(140, 400); addP({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 150, life: rand(.5, .9), size: rand(8, 15), color: pick(['#fff7a1', '#ffd93d', '#ffffff', '#ff99c8', '#a0f0ff']), shape: 'star', vr: rand(-6, 6), drag: 2.5 }); }
+}
+function confetti(n = 140) {
+  for (let i = 0; i < n; i++) addP({ x: rand(0, FW), y: rand(-FH * .4, -10), vx: rand(-40, 40), vy: rand(90, 260), g: 110, life: rand(3.2, 5), size: rand(9, 15), color: pick(CANDY), shape: 'rect', rot: rand(0, 6), vr: rand(-8, 8), wob: rand(1, 3) });
+}
+function starPath(r) { fc.beginPath(); for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * .45 : r, a = -Math.PI / 2 + i * Math.PI / 5; fc.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } fc.closePath(); }
+let fxDirty = false;
+const LAVA = ['#ffb000', '#ff8a1c', '#ff6b1a', '#f2421b'];
+// Glowing lava fountain above the crater while the volcano erupts
+function drawFountain() {
+  const c = craterPos(), tm = performance.now() / 1000;
+  const h = FH * .2 * (.85 + .15 * Math.sin(tm * 18)) * Math.min(1, G.emitting / .6);
+  const wob = Math.sin(tm * 11) * 8;
+  const gr = fc.createLinearGradient(0, c.y, 0, c.y - h);
+  gr.addColorStop(0, '#ffe45c'); gr.addColorStop(.4, '#ff9f1c'); gr.addColorStop(1, 'rgba(242,66,27,0)');
+  fc.fillStyle = 'rgba(255,150,30,.25)';
+  fc.beginPath(); fc.ellipse(c.x, c.y - h * .35, 55, h * .55, 0, 0, 7); fc.fill();
+  fc.fillStyle = gr; fc.beginPath();
+  fc.moveTo(c.x - 26, c.y);
+  fc.quadraticCurveTo(c.x - 16 + wob, c.y - h * .6, c.x - 8 + wob, c.y - h);
+  fc.lineTo(c.x + 8 + wob, c.y - h);
+  fc.quadraticCurveTo(c.x + 16 + wob, c.y - h * .6, c.x + 26, c.y);
+  fc.closePath(); fc.fill();
+}
+function updateFx(dt) {
+  const fountain = G.emitting > 0 && G.state === 'erupting';
+  if (!parts.length && !fxDirty && !fountain) return;
+  fc.clearRect(0, 0, FW, FH); fxDirty = parts.length > 0 || fountain;
+  if (fountain) drawFountain();
+  const embers = [];
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.age += dt;
+    if (p.age >= p.life) { parts.splice(i, 1); continue; }
+    p.vy += p.g * dt;
+    if (p.drag) { p.vx *= 1 - p.drag * dt; p.vy *= 1 - p.drag * dt; }
+    p.x += p.vx * dt + (p.wob ? Math.sin(p.age * p.wob * 3) * 40 * dt : 0);
+    p.y += p.vy * dt; p.rot += p.vr * dt;
+    if (p.bounce && p.vy > 0 && p.y > FH - p.size - 4) { p.y = FH - p.size - 4; p.vy *= -p.bounce; p.vx *= .8; }
+    if (p.shape === 'lava') {
+      if (Math.random() < .3) embers.push({ x: p.x, y: p.y, vx: rand(-30, 30), vy: rand(-30, 20), g: 60, life: rand(.3, .6), size: rand(1.8, 3.5), color: pick(['#ffe45c', '#ffb000']), shape: 'ember' });
+      if (p.vy > 0 && p.y > p.floor) { p.shape = 'splat'; p.y = p.floor; p.vx = p.vy = p.g = 0; p.age = 0; p.life = rand(1.4, 2.2); }
+    }
+    fc.globalAlpha = Math.min(1, (p.life - p.age) / .5);
+    fc.save(); fc.translate(p.x, p.y);
+    if (p.shape === 'lava') {
+      // stretched, glowing blob pointing the way it flies
+      const len = p.size * (1 + Math.min(1.6, Math.hypot(p.vx, p.vy) / 700));
+      fc.rotate(Math.atan2(p.vy, p.vx));
+      fc.fillStyle = 'rgba(255,140,20,.28)'; fc.beginPath(); fc.ellipse(0, 0, len * 1.5, p.size * 1.6, 0, 0, 7); fc.fill();
+      const gr = fc.createRadialGradient(len * .25, 0, 0, 0, 0, len);
+      gr.addColorStop(0, '#fff6b0'); gr.addColorStop(.35, '#ffc53d'); gr.addColorStop(.75, p.color); gr.addColorStop(1, '#c62a1a');
+      fc.fillStyle = gr; fc.beginPath(); fc.ellipse(0, 0, len, p.size, 0, 0, 7); fc.fill();
+    } else if (p.shape === 'splat') {
+      // lands, spreads out a little and cools from orange to dark red
+      const t = p.age / p.life, rx = p.size * (1.5 + t * 1.2), ry = p.size * .5;
+      fc.fillStyle = '#b8321f'; fc.beginPath(); fc.ellipse(0, 0, rx, ry, 0, 0, 7); fc.fill();
+      fc.globalAlpha *= Math.max(0, 1 - t * 1.4);
+      fc.fillStyle = '#ff8a1c'; fc.beginPath(); fc.ellipse(0, -ry * .15, rx * .8, ry * .7, 0, 0, 7); fc.fill();
+      fc.fillStyle = '#ffe45c'; fc.beginPath(); fc.ellipse(0, -ry * .25, rx * .4, ry * .35, 0, 0, 7); fc.fill();
+    } else if (p.shape === 'ember') {
+      fc.fillStyle = 'rgba(255,160,30,.35)'; fc.beginPath(); fc.arc(0, 0, p.size * 2.2, 0, 7); fc.fill();
+      fc.fillStyle = p.color; fc.beginPath(); fc.arc(0, 0, p.size, 0, 7); fc.fill();
+    } else if (p.shape === 'circle') {
+      fc.fillStyle = p.color; fc.beginPath(); fc.arc(0, 0, p.size, 0, 7); fc.fill();
+      fc.fillStyle = 'rgba(255,255,255,.65)'; fc.beginPath(); fc.arc(-p.size * .35, -p.size * .35, p.size * .3, 0, 7); fc.fill();
+    } else if (p.shape === 'rect') {
+      fc.rotate(p.rot); fc.scale(1, Math.cos(p.age * 6)); fc.fillStyle = p.color; fc.fillRect(-p.size / 2, -p.size * .3, p.size, p.size * .6);
+    } else if (p.shape === 'star') {
+      fc.rotate(p.rot); fc.fillStyle = p.color; starPath(p.size); fc.fill();
+    }
+    fc.restore();
+  }
+  fc.globalAlpha = 1;
+  embers.forEach(addP);
+}
+function craterPos() {
+  const m = qVol.getScreenCTM();
+  if (!m) { const r = qVol.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height * .23 }; }
+  const pt = qVol.createSVGPoint(); pt.x = 200; pt.y = 88; const q = pt.matrixTransform(m);
+  return { x: q.x, y: q.y };
+}
+function emitEruption() {
+  const c = craterPos(), k = Math.sqrt(FH / 800);
+  for (let i = 0; i < 3; i++) addP({ x: c.x + rand(-20, 20), y: c.y - rand(0, 30), vx: rand(-360, 360) * k, vy: rand(-1100, -600) * k, g: 1300 * k, life: 6, size: rand(8, 17), color: pick(LAVA), shape: 'lava', floor: rand(FH * .92, FH - 8) });
+  if (Math.random() < .07) spawnPuff();
+}
+function spawnPuff() {
+  const p = document.createElement('div'); p.className = 'puff';
+  p.style.setProperty('--s', randi(28, 56) + 'px');
+  p.style.setProperty('--pc', pick(['#e9e4ff', '#ffe3ef', '#e3f6ff', '#f4f4f4']));
+  p.style.left = `calc(50% + ${randi(-24, 24)}px)`;
+  p.addEventListener('animationend', () => p.remove());
+  $('#qVolWrap').appendChild(p);
+}
+
+/* ================= GAME STATE ================= */
+const G = { state: 'start', token: 0, level: 0, stage: 0, rumbling: false, draining: false, paused: false, count: 0, q: null, lastKey: null, puffT: 0, emitting: 0, erupts: 0, snap: '', snapPieces: 12 };
+function dinoDo(cls) { dino.classList.remove('hop', 'dance', 'nervous'); void dino.getBoundingClientRect(); if (cls) dino.classList.add(cls); }
+dino.addEventListener('animationend', e => { if (e.animationName === 'hop') dino.classList.remove('hop'); });
+function showOnly(which) {
+  $('#puzzle').classList.toggle('hidden', which !== 'puzzle');
+  $('#quiz').classList.toggle('hidden', which !== 'quiz');
+  $('#prog').classList.toggle('hidden', which !== 'quiz');
+}
+
+/* ================= PHASE 1: PUZZLE ================= */
+const P = { pieces: [], cols: 4, rows: 3, placed: 0, z: 10, snaps: 0, bw: 0, bh: 0, bx: 0, by: 0, pw: 0, ph: 0 };
+const gridFor = n => n === 6 ? [3, 2] : n === 20 ? [5, 4] : n === 40 ? [8, 5] : [4, 3];
+
+function computeLayout(n, cols, rows) {
+  const W = innerWidth, H = innerHeight, M = 12, TOP = 92;
+  const land = W >= H * 1.05;
+  const ov = n > 20 ? .5 : .72; // how much loose pieces may stack; big puzzles overlap more so the board stays large
+  let out = null;
+  for (let f = land ? .62 : .94; ; f -= .02) {
+    const last = f <= (land ? .36 : .5);
+    const bw = land ? Math.min(W * f, (H - TOP - M) * 4 / 3 * .98) : Math.min(W * f, H * .5 * 4 / 3);
+    const bh = bw * .75, pw = bw / cols, ph = bh / rows, bx = (W - bw) / 2;
+    const slots = [];
+    if (land) {
+      const by = TOP + (H - TOP - M - bh) / 2;
+      const sw = bx - M * 2, availH = H - TOP - M;
+      const colsS = Math.max(1, Math.floor((sw + pw * .35) / pw));
+      const rowsS = Math.max(1, Math.floor((availH - ph) / (ph * ov)) + 1);
+      if (2 * colsS * rowsS >= n || last) {
+        const per = Math.ceil(n / 2), rowsN = Math.ceil(per / colsS);
+        for (const side of [0, 1]) for (let i = 0; i < per; i++) {
+          const c = i % colsS, r = Math.floor(i / colsS);
+          const off = colsS > 1 ? c * (sw - pw) / (colsS - 1) : Math.max(0, (sw - pw) / 2);
+          const x = side ? W - M - pw - off : M + off;
+          const y = TOP + (rowsN > 1 ? r * (availH - ph) / (rowsN - 1) : (availH - ph) / 2);
+          slots.push({ x, y });
+        }
+        out = { bw, bh, pw, ph, bx, by, slots }; break;
+      }
+    } else {
+      const by = TOP, ay = by + bh + M * 2, ah = H - ay - M;
+      const colsA = Math.max(1, Math.floor((W - 2 * M + pw * .35) / pw));
+      const rowsA = Math.max(1, Math.floor((ah - ph) / (ph * ov)) + 1);
+      if (colsA * rowsA >= n || last) {
+        const rowsN = Math.ceil(n / colsA);
+        for (let i = 0; i < n; i++) {
+          const c = i % colsA, r = Math.floor(i / colsA);
+          const x = M + (colsA > 1 ? c * (W - 2 * M - pw) / (colsA - 1) : (W - 2 * M - pw) / 2);
+          const y = Math.min(H - ph - 4, ay + (rowsN > 1 ? r * Math.max(0, ah - ph) / (rowsN - 1) : 0));
+          slots.push({ x, y });
+        }
+        out = { bw, bh, pw, ph, bx, by, slots }; break;
+      }
+    }
+  }
+  out.slots = shuffle(out.slots).map(s => ({ x: s.x + rand(-8, 8), y: s.y + rand(-8, 8) }));
+  return out;
+}
+function layoutPuzzle(rescatter) {
+  const L = computeLayout(P.pieces.length, P.cols, P.rows);
+  Object.assign(P, L);
+  const b = $('#board');
+  Object.assign(b.style, { left: P.bx + 'px', top: P.by + 'px', width: P.bw + 'px', height: P.bh + 'px' });
+  const cells = $('#cells');
+  cells.style.gridTemplateColumns = `repeat(${P.cols},1fr)`; cells.style.gridTemplateRows = `repeat(${P.rows},1fr)`;
+  cells.innerHTML = '<div></div>'.repeat(P.cols * P.rows);
+  let si = 0;
+  P.pieces.forEach(p => {
+    const s = p.el.style;
+    s.width = P.pw + 'px'; s.height = P.ph + 'px';
+    s.backgroundImage = PICTURE; s.backgroundSize = `${P.bw}px ${P.bh}px`;
+    s.backgroundPosition = `${-p.c * P.pw}px ${-p.r * P.ph}px`;
+    if (p.placed) { p.x = P.bx + p.c * P.pw; p.y = P.by + p.r * P.ph; }
+    else if (rescatter) { const sl = L.slots[si++ % L.slots.length]; p.x = sl.x; p.y = sl.y; }
+    placeEl(p);
+  });
+}
+function placeEl(p) {
+  p.el.style.transform = `translate3d(${p.x}px,${p.y}px,0) rotate(${p.drag || p.placed ? 0 : p.rot}deg) scale(${p.drag ? 1.08 : 1})`;
+}
+function bindPiece(p) {
+  const el = p.el;
+  el.addEventListener('pointerdown', e => {
+    if (p.placed || G.state !== 'puzzle' || p.drag) return;
+    e.preventDefault(); A.init();
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    p.drag = { id: e.pointerId, dx: e.clientX - p.x, dy: e.clientY - p.y };
+    el.style.zIndex = ++P.z; el.classList.add('drag'); SFX.pick(); placeEl(p);
+  });
+  el.addEventListener('pointermove', e => {
+    if (!p.drag || e.pointerId !== p.drag.id) return;
+    e.preventDefault();
+    p.x = clamp(e.clientX - p.drag.dx, -P.pw * .4, innerWidth - P.pw * .6);
+    p.y = clamp(e.clientY - p.drag.dy, -P.ph * .4, innerHeight - P.ph * .6);
+    placeEl(p);
+  });
+  const end = e => { if (!p.drag || e.pointerId !== p.drag.id) return; p.drag = null; el.classList.remove('drag'); dropPiece(p); };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('lostpointercapture', end);
+}
+function dropPiece(p) {
+  const tx = P.bx + p.c * P.pw, ty = P.by + p.r * P.ph;
+  const snapDist = Math.max(70, Math.min(P.pw, P.ph) * .6); // generous for small hands
+  if (Math.hypot(p.x - tx, p.y - ty) < snapDist && G.state === 'puzzle') {
+    p.placed = true; p.x = tx; p.y = ty;
+    p.el.classList.add('placed'); p.el.style.zIndex = 2; placeEl(p);
+    SFX.snap(); sparkle(tx + P.pw / 2, ty + P.ph / 2, 16);
+    P.placed++; P.snaps++;
+    if (P.placed === P.pieces.length) puzzleDone();
+    else if (!V.speaking && (P.snaps === 1 || Math.random() < .35)) V.say(cheer());
+  } else placeEl(p);
+}
+function startPuzzle() {
+  G.token++; G.state = 'puzzle'; G.rumbling = false; G.paused = false;
+  V.stop(); resetVolcano();
+  ['#reward', '#celebrate', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
+  dinoDo(null); showOnly('puzzle');
+  [P.cols, P.rows] = gridFor(+S.pieces);
+  P.pieces.forEach(p => p.el.remove()); P.pieces = [];
+  P.placed = 0; P.snaps = 0; P.z = 10;
+  $('#full').classList.remove('show'); $('#board').classList.remove('done');
+  for (let r = 0; r < P.rows; r++) for (let c = 0; c < P.cols; c++) {
+    const el = document.createElement('div'); el.className = 'piece';
+    const p = { r, c, el, placed: false, x: 0, y: 0, rot: rand(-9, 9), drag: null };
+    el.style.zIndex = ++P.z;
+    bindPiece(p); $('#puzzle').appendChild(el); P.pieces.push(p);
+  }
+  layoutPuzzle(true);
+  V.say("Let's build the volcano! Drag the pieces onto the picture.");
+}
+async function puzzleDone() {
+  const t = ++G.token; G.state = 'celebrate';
+  $('#board').classList.add('done');
+  await wait(250);
+  $('#full').classList.add('show'); SFX.fanfare(); confetti(160); dinoDo('dance');
+  await wait(1400); if (t !== G.token) return;
+  const cel = $('#celebrate'), wrap = $('#celVol'), sv = wrap.querySelector('svg');
+  setFace(sv, 'sleep'); wrap.classList.remove('wake', 'dance');
+  cel.classList.add('show'); showOnly(null);
+  await wait(900); if (t !== G.token) return;
+  setFace(sv, 'calm'); wrap.classList.add('wake'); SFX.boing();
+  await wait(1100); if (t !== G.token) return;
+  setFace(sv, 'happy'); wrap.classList.remove('wake'); wrap.classList.add('dance'); confetti(90); SFX.chime();
+  await V.say("You built the volcano! Let's play!"); if (t !== G.token) return;
+  await wait(500); if (t !== G.token) return;
+  cel.classList.remove('show'); wrap.classList.remove('dance'); dinoDo(null);
+  startQuiz(true);
+}
+
+/* ================= PHASE 2: KEEP THE VOLCANO CALM ================= */
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const BUB_COLORS = [['#2ec4b6', '#1a9d91'], ['#9b5de5', '#7433c7'], ['#ff5d8f', '#e0356d'], ['#ffb703', '#f08c00'], ['#3a86ff', '#1c63d6'], ['#6bcb3a', '#46a01c'], ['#ff8c42', '#e5661a']];
+
+function numberChoices(answer, n, lo, hi, near) {
+  let pool = []; for (let v = lo; v <= hi; v++) if (v !== answer) pool.push(v);
+  if (near) pool = pool.map(v => [v, Math.abs(v - answer) + Math.random() * 2.5]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
+  else pool = shuffle(pool);
+  return pool.slice(0, n - 1);
+}
+function dinoGroup(count, color, fadeLast = 0) {
+  let d = '';
+  for (let i = 0; i < count; i++) d += `<svg class="dn${i >= count - fadeLast ? ' gone' : ''}" viewBox="0 0 64 56" style="color:${color}"><use href="#dino"/></svg>`;
+  return `<div class="grp"><div class="dinos" style="grid-template-columns:repeat(${Math.min(count, 5)},auto)">${d}</div><div class="num">${count}</div></div>`;
+}
+function makeQuestion() {
+  const n = +S.choices;
+  let q, key;
+  for (let tries = 0; tries < 20; tries++) {
+    if (S.mode === 'letters') {
+      const L = pick(LETTERS), both = S.letterCase === 'both';
+      const tc = both ? (Math.random() < .5 ? 'upper' : 'lower') : S.letterCase;
+      const fmt = (x, c) => c === 'lower' ? x.toLowerCase() : x;
+      const others = shuffle(LETTERS.filter(x => x !== L)).slice(0, n - 1);
+      const items = [{ id: L, label: fmt(L, tc) }].concat(others.map(x => ({ id: x, label: fmt(x, both ? (Math.random() < .5 ? 'upper' : 'lower') : tc) })));
+      const name = both ? (tc === 'lower' ? `little letter, ${L}` : `big letter, ${L}`) : `letter, ${L}`;
+      key = 'L' + L + tc;
+      q = { answer: L, items: shuffle(items), speech: pick([`Can you find the ${name}?`, `Where is the ${name}?`, `Tap the ${name}!`]), problem: null };
+    } else if (S.mode === 'math') {
+      const op = S.mathOps === 'both' ? pick(['+', '-']) : '+';
+      let a, b, r;
+      if (op === '+') { do { a = randi(1, 6); b = randi(1, 5); } while (a + b > 10); r = a + b; }
+      else { a = randi(2, 10); b = randi(1, Math.min(5, a - 1)); r = a - b; }
+      key = a + op + b;
+      const items = [r].concat(numberChoices(r, n, 0, 10, true)).map(v => ({ id: v, label: String(v) }));
+      const problem = op === '+'
+        ? `${dinoGroup(a, '#6bcb3a')}<div class="op">+</div>${dinoGroup(b, '#b388ff')}<div class="op">=</div><div class="qm">?</div>`
+        : `${dinoGroup(a, '#6bcb3a', b)}<div class="op">&minus;</div>${dinoGroup(b, '#6bcb3a', b)}<div class="op">=</div><div class="qm">?</div>`;
+      q = { answer: r, items: shuffle(items), problem, speech: op === '+' ? `What is ${a} plus ${b}?` : `What is ${a} take away ${b}?` };
+    } else {
+      const max = +S.numMax, t = randi(1, max);
+      key = 'N' + t;
+      const items = [t].concat(numberChoices(t, n, 1, max, false)).map(v => ({ id: v, label: String(v) }));
+      q = { answer: t, items: shuffle(items), problem: null, speech: pick([`Can you find the number, ${t}?`, `Where is the number, ${t}?`, `Tap the number, ${t}!`, `Find the number, ${t}!`]) };
+    }
+    if (key !== G.lastKey) break;
+  }
+  G.lastKey = key;
+  return q;
+}
+function renderQuestion(q) {
+  const pb = $('#problem');
+  pb.style.display = q.problem ? 'flex' : 'none'; pb.innerHTML = q.problem || '';
+  const bx = $('#bubbles'); bx.innerHTML = ''; bx.classList.remove('away');
+  bx.style.setProperty('--n', q.items.length);
+  const cols = shuffle(BUB_COLORS);
+  q.items.forEach((it, i) => {
+    const b = document.createElement('button'); b.className = 'bubble';
+    b.style.setProperty('--c', cols[i][0]); b.style.setProperty('--c2', cols[i][1]);
+    b.style.setProperty('--d', (i * .12) + 's');
+    b.innerHTML = `<span>${it.label}</span>`;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); A.init(); onAnswer(b, it.id); });
+    bx.appendChild(b);
+  });
+}
+function renderProgress() {
+  $('#prog').innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="dot${i < G.count ? ' on' : ''}">${starSVG(i < G.count ? '#ffd93d' : '#ffffff')}</span>`).join('');
+}
+function setMeter(L) { const y = 345 - L * 326; lavaFill.setAttribute('y', y); lavaFill.setAttribute('height', 420 - y); }
+function setStage(s) {
+  if (s === G.stage) return;
+  const up = s > G.stage; G.stage = s;
+  const w = $('#qVolWrap'); w.classList.remove('r1', 'r2', 'r3'); if (s > 0) w.classList.add('r' + s);
+  setFace(qVol, s <= 1 ? 'calm' : s === 2 ? 'nervous' : 'worried');
+  $('#meter').classList.toggle('hot', s === 3);
+  if (up && s >= 1) SFX.wobble();
+  if (s === 3) dinoDo('nervous'); else if (dino.classList.contains('nervous')) dinoDo(null);
+}
+function resetVolcano() {
+  const w = $('#qVolWrap'); w.classList.remove('r1', 'r2', 'r3', 'erupt');
+  qVol.classList.remove('erupting'); $('#meter').classList.remove('hot');
+  G.emitting = 0; G.draining = false;
+}
+function startQuiz(fresh) {
+  G.token++; G.paused = false;
+  ['#reward', '#celebrate', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
+  showOnly('quiz');
+  if (fresh) G.count = 0;
+  renderProgress(); dinoDo(null);
+  nextQuestion();
+}
+async function nextQuestion() {
+  const t = ++G.token;
+  G.state = 'quiz'; G.rumbling = false;
+  resetVolcano(); G.level = 0; setMeter(0); G.stage = -1; setStage(0); setFace(qVol, 'calm');
+  G.q = makeQuestion(); renderQuestion(G.q);
+  await wait(450); if (t !== G.token) return;
+  await V.say(G.q.speech); if (t !== G.token) return;
+  G.rumbling = true;
+}
+function onAnswer(b, id) {
+  if (G.state !== 'quiz' || G.paused || b.classList.contains('wrong')) return;
+  if (id === G.q.answer) correct(b);
+  else {
+    b.classList.add('wrong'); SFX.soft();
+    V.say(encourage());
+  }
+}
+async function correct(b) {
+  const t = ++G.token; G.state = 'correct'; G.rumbling = false; G.draining = true;
+  b.classList.add('right');
+  document.querySelectorAll('.bubble').forEach(x => { if (x !== b) x.classList.add('dim'); });
+  const r = b.getBoundingClientRect(); sparkle(r.left + r.width / 2, r.top + r.height / 2, 22);
+  SFX.chime(); dinoDo('hop');
+  const w = $('#qVolWrap'); w.classList.remove('r1', 'r2', 'r3'); $('#meter').classList.remove('hot'); G.stage = 0;
+  setFace(qVol, 'happy');
+  G.count++; renderProgress();
+  await V.say(praise()); if (t !== G.token) return;
+  await wait(500); if (t !== G.token) return;
+  if (G.count >= 10) showReward(); else nextQuestion();
+}
+async function erupt() {
+  const t = ++G.token; G.state = 'erupting'; G.rumbling = false; G.level = 1; setMeter(1);
+  const w = $('#qVolWrap'); w.classList.remove('r1', 'r2', 'r3'); w.classList.add('erupt');
+  qVol.classList.add('erupting'); setFace(qVol, 'giggle'); $('#meter').classList.remove('hot');
+  $('#bubbles').classList.add('away');
+  SFX.erupt(); G.emitting = 2.8; dinoDo('dance');
+  const line = G.erupts++ === 0 ? "Whoa, what a big eruption! Let's try again!" : eruptLines();
+  await Promise.all([V.say(line), wait(4300)]); if (t !== G.token) return;
+  // settle down, then the same question continues
+  w.classList.remove('erupt'); qVol.classList.remove('erupting'); setFace(qVol, 'calm'); G.draining = true; dinoDo(null);
+  await wait(1000); if (t !== G.token) return;
+  G.state = 'quiz'; G.stage = -1; setStage(0);
+  document.querySelectorAll('.bubble').forEach(x => x.classList.remove('wrong'));
+  $('#bubbles').classList.remove('away');
+  await V.say(G.q.speech); if (t !== G.token) return;
+  G.rumbling = true;
+}
+async function showReward() {
+  const t = ++G.token; G.state = 'reward'; G.rumbling = false;
+  showOnly(null);
+  const r = $('#reward'); r.classList.remove('ready'); r.classList.add('show');
+  const st = $('#rStars');
+  st.innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="rstar">${starSVG(CANDY[i % CANDY.length])}</span>`).join('');
+  confetti(180); SFX.fanfare(); dinoDo('dance');
+  for (let i = 0; i < 10; i++) { await wait(180); if (t !== G.token) return; st.children[i].classList.add('on'); SFX.star(i); }
+  V.say(pick(rewardLines));
+  await wait(600); if (t !== G.token) return;
+  r.classList.add('ready');
+}
+
+$('#repeat').addEventListener('pointerdown', e => {
+  e.preventDefault(); A.init();
+  if (G.q && (G.state === 'quiz' || G.state === 'correct') && !G.paused) { SFX.tap(); V.say(G.q.speech); }
+});
+$('#againBtn').addEventListener('click', () => { A.init(); SFX.tap(); startQuiz(true); });
+$('#puzBtn').addEventListener('click', () => { A.init(); SFX.tap(); startPuzzle(); });
+
+/* ================= MAIN LOOP ================= */
+let lastT = performance.now();
+function frame(t) {
+  const dt = Math.min(.05, (t - lastT) / 1000); lastT = t;
+  if (G.state === 'quiz' && G.rumbling && !G.paused) {
+    G.level = Math.min(1, G.level + dt / SPEED[S.speed]);
+    setMeter(G.level);
+    setStage(G.level < .3 ? 0 : G.level < .55 ? 1 : G.level < .8 ? 2 : 3);
+    if (G.stage >= 2) { G.puffT -= dt; if (G.puffT <= 0) { spawnPuff(); G.puffT = G.stage === 2 ? 1.1 : .5; } }
+    if (G.level >= 1) erupt();
+  }
+  if (G.draining) { G.level = Math.max(0, G.level - dt * 1.3); setMeter(G.level); if (G.level === 0) G.draining = false; }
+  if (G.emitting > 0) { G.emitting -= dt; emitEruption(); }
+  updateFx(dt);
+  requestAnimationFrame(frame);
+}
+
+/* ================= HUD: mute, gear, settings ================= */
+$('#mute').addEventListener('pointerdown', e => {
+  e.preventDefault(); A.init(); A.muted = !A.muted; A.applyMute();
+  $('#mute').classList.toggle('off', A.muted);
+});
+(function gearHold() {
+  const g = $('#gear'), ring = g.querySelector('.ring'), C = 2 * Math.PI * 28;
+  let t0 = 0, raf = 0, timer = 0;
+  ring.style.strokeDasharray = C; ring.style.strokeDashoffset = C;
+  const cancel = () => { cancelAnimationFrame(raf); clearTimeout(timer); raf = 0; ring.style.strokeDashoffset = C; g.classList.remove('holding'); };
+  // The ring is just the visual; the timer decides when 3 seconds have passed
+  const tick = () => {
+    ring.style.strokeDashoffset = C * (1 - Math.min(1, (performance.now() - t0) / 3000));
+    raf = requestAnimationFrame(tick);
+  };
+  g.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation();
+    try { g.setPointerCapture(e.pointerId); } catch (_) {}
+    cancel(); t0 = performance.now(); g.classList.add('holding'); raf = requestAnimationFrame(tick);
+    timer = setTimeout(() => { cancel(); openSettings(); }, 3000);
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => g.addEventListener(ev, cancel));
+})();
+
+const OPTS = [
+  { key: 'mode', label: 'Learning mode', opts: [['numbers', 'Numbers'], ['letters', 'Letters'], ['math', 'Math']] },
+  { key: 'numMax', label: 'Numbers range', opts: [[10, '1 to 10'], [20, '1 to 20']], show: () => S.mode === 'numbers' },
+  { key: 'letterCase', label: 'Letters', opts: [['upper', 'Uppercase ABC'], ['lower', 'Lowercase abc'], ['both', 'Both']], show: () => S.mode === 'letters' },
+  { key: 'mathOps', label: 'Math (within 10)', opts: [['plus', 'Adding'], ['both', 'Adding + taking away']], show: () => S.mode === 'math' },
+  { key: 'choices', label: 'Answer bubbles', opts: [[3, '3'], [4, '4 (Advanced)']] },
+  { key: 'speed', label: 'Volcano speed', opts: [['slow', 'Slow'], ['medium', 'Medium'], ['fast', 'Fast']] },
+  { key: 'pieces', label: 'Puzzle pieces', opts: [[6, '6'], [12, '12'], [20, '20'], [40, '40 (Hard)']] },
+  { key: 'music', label: 'Music', opts: [[true, 'On'], [false, 'Off']] },
+  { key: 'voice', label: 'Voice', opts: [[true, 'On'], [false, 'Off']] },
+];
+function renderSettings() {
+  const box = $('#setRows'); box.innerHTML = '';
+  OPTS.forEach(o => {
+    if (o.show && !o.show()) return;
+    const row = document.createElement('div'); row.className = 'srow';
+    row.innerHTML = `<label>${o.label}</label>`;
+    const seg = document.createElement('div'); seg.className = 'seg';
+    o.opts.forEach(([v, txt]) => {
+      const b = document.createElement('button'); b.textContent = txt;
+      b.setAttribute('aria-pressed', String(S[o.key] === v));
+      b.addEventListener('click', () => {
+        S[o.key] = v; saveS(); renderSettings();
+        if (o.key === 'music') A.setMusic(S.music);
+      });
+      seg.appendChild(b);
+    });
+    row.appendChild(seg); box.appendChild(row);
+  });
+}
+const qSnap = () => JSON.stringify([S.mode, S.numMax, S.letterCase, S.mathOps, S.choices]);
+function openSettings() {
+  G.paused = true; V.stop();
+  G.snap = qSnap(); G.snapPieces = S.pieces;
+  renderSettings(); $('#settings').classList.add('show');
+}
+function closeSettings() {
+  $('#settings').classList.remove('show'); G.paused = false;
+}
+$('#sDone').addEventListener('click', () => {
+  closeSettings();
+  if (G.state === 'puzzle' && S.pieces !== G.snapPieces) startPuzzle();
+  else if (['quiz', 'correct', 'erupting'].includes(G.state)) {
+    if (qSnap() !== G.snap) nextQuestion();
+    else if (G.state === 'quiz' && G.q) V.say(G.q.speech);
+  }
+});
+// From the start screen these buttons also count as "press play" (unlocks sound on tablets)
+function wakeAudio() { A.init(); if (G.state === 'start') A.setMusic(S.music); }
+$('#sPuzzle').addEventListener('click', () => { closeSettings(); wakeAudio(); startPuzzle(); });
+$('#sSkip').addEventListener('click', () => { closeSettings(); wakeAudio(); startQuiz(true); });
+$('#sFull').addEventListener('click', () => { if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } else goFull(); });
+$('#settings').addEventListener('pointerdown', e => { if (e.target.id === 'settings') $('#sDone').click(); });
+
+function goFull() {
+  const el = document.documentElement, rf = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!rf || document.fullscreenElement) return;
+  try {
+    const p = rf.call(el, { navigationUI: 'hide' });
+    const lock = () => { try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} };
+    if (p && p.then) p.then(lock).catch(() => {}); else lock();
+  } catch (e) {}
+}
+
+/* ================= START ================= */
+$('#start').addEventListener('click', () => {
+  if (G.state !== 'start') return;
+  A.init();
+  if (matchMedia('(pointer:coarse)').matches) goFull();
+  SFX.tap(); A.setMusic(S.music);
+  startPuzzle();
+});
+
+/* ================= GLOBAL ================= */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('pointerdown', () => { if (A.ctx && A.ctx.state !== 'running' && !document.hidden) A.ctx.resume(); }, true);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (A.ctx) A.ctx.suspend(); V.stop(); G.paused = true; }
+  else { if (A.ctx) A.ctx.resume(); if (!$('#settings').classList.contains('show')) G.paused = false; }
+});
+let rsz = 0;
+window.addEventListener('resize', () => {
+  sizeFx();
+  clearTimeout(rsz); rsz = setTimeout(() => { if (G.state === 'puzzle') layoutPuzzle(true); }, 120);
+});
+sizeFx();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
