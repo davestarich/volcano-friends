@@ -53,7 +53,47 @@ function renderSettings() {
     });
     row.appendChild(seg); box.appendChild(row);
   });
+  if (S.voice && hasTTS) voiceRows(box);
 }
+// Voice picker: every voice this device has (English first), a Test button, and a pitch choice
+const shortVoiceName = n => n.replace(/^Microsoft /, '').replace(/ Online \(Natural\)/, ' (natural)').replace(/ - .*$/, '');
+function voiceRows(box) {
+  const row = document.createElement('div'); row.className = 'srow';
+  row.innerHTML = '<label for="voicePick">Which voice</label>';
+  const seg = document.createElement('div'); seg.className = 'seg';
+  const sel = document.createElement('select'); sel.id = 'voicePick';
+  const vs = V.all();
+  if (!vs.length) { sel.add(new Option('Loading voices...', '')); sel.disabled = true; }
+  else {
+    const auto = V.auto();
+    sel.add(new Option(`Automatic (${shortVoiceName(auto.name)})`, ''));
+    const group = (label, list) => {
+      if (!list.length) return;
+      const g = document.createElement('optgroup'); g.label = label;
+      list.sort((a, b) => a.name.localeCompare(b.name)).forEach(v => g.appendChild(new Option(`${shortVoiceName(v.name)} (${v.lang})`, v.name)));
+      sel.appendChild(g);
+    };
+    group('English', vs.filter(isEnglish)); group('Other languages', vs.filter(v => !isEnglish(v)));
+    sel.value = VP.name && vs.some(v => v.name === VP.name) ? VP.name : '';
+  }
+  sel.addEventListener('change', () => { VP.name = sel.value; saveVP(); V.pick(); V.say(VOICE_SAMPLE); });
+  const test = document.createElement('button'); test.textContent = 'Test'; test.className = 'test';
+  test.addEventListener('click', () => { A.init(); V.say(VOICE_SAMPLE); });
+  seg.append(sel, test); row.appendChild(seg); box.appendChild(row);
+
+  const prow = document.createElement('div'); prow.className = 'srow';
+  prow.innerHTML = '<label>Voice pitch</label>';
+  const pseg = document.createElement('div'); pseg.className = 'seg';
+  [['normal', 'Normal'], ['higher', 'Higher'], ['highest', 'Highest']].forEach(([v, txt]) => {
+    const b = document.createElement('button'); b.textContent = txt;
+    b.setAttribute('aria-pressed', String(VP.pitch === v));
+    b.addEventListener('click', () => { VP.pitch = v; saveVP(); renderSettings(); V.say(VOICE_SAMPLE); });
+    pseg.appendChild(b);
+  });
+  prow.appendChild(pseg); box.appendChild(prow);
+}
+// Voices can finish loading after the settings panel is already open
+V.onVoices = () => { if ($('#settings').classList.contains('show')) renderSettings(); };
 const qSnap = () => JSON.stringify([S.mode, S.numMax, S.letterCase, S.mathOps, S.choices]);
 function openSettings() {
   G.paused = true; V.stop();

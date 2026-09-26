@@ -9,7 +9,9 @@ A.init = function () {
   const c = A.ctx = new AC();
   const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(c.destination);
   A.master = c.createGain(); A.master.connect(comp);
-  A.music = c.createGain(); A.music.gain.value = 0; A.music.connect(A.master);
+  // Music runs through a gentle low-pass filter so it stays warm and soft, never bright or "tingy"
+  const mellow = c.createBiquadFilter(); mellow.type = 'lowpass'; mellow.frequency.value = 1500; mellow.Q.value = .5; mellow.connect(A.master);
+  A.music = c.createGain(); A.music.gain.value = 0; A.music.connect(mellow);
   A.sfx = c.createGain(); A.sfx.gain.value = .9; A.sfx.connect(A.master);
   const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -28,6 +30,7 @@ function note(t, f, dur, o = {}) {
   const v = o.vol || .2, at = o.attack || .008;
   g.gain.setValueAtTime(.0001, t);
   g.gain.exponentialRampToValueAtTime(v, t + at);
+  if (o.release) g.gain.setValueAtTime(v, t + dur - o.release); // hold the note, then fade over `release`
   g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   osc.connect(g); g.connect(o.dest || A.sfx);
   osc.start(t); osc.stop(t + dur + .05);
@@ -92,8 +95,8 @@ const SFX = {
   }
 };
 
-// Background music: a bouncy 8-bar loop in C major
-const BPM = 116, ST = 60 / BPM / 2;
+// Background music: a gentle 8-bar loop in C major (melody is played an octave lower than written)
+const BPM = 88, ST = 60 / BPM / 2, MUSIC_VOL = .2, MUSIC_DUCK = .07;
 const MEL = [76, 0, 79, 76, 72, 0, 74, 76, 77, 0, 81, 77, 72, 0, 74, 77, 79, 0, 77, 76, 74, 0, 71, 74, 72, 76, 79, 84, 79, 0, 76, 0,
   79, 0, 76, 79, 84, 0, 79, 76, 81, 0, 77, 81, 84, 0, 81, 77, 79, 77, 76, 74, 71, 74, 79, 0, 72, 0, 76, 0, 72, 0, 0, 0];
 const ROOTS = [48, 53, 43, 48, 48, 53, 43, 48];
@@ -107,17 +110,19 @@ A.schedule = function () {
 A.playStep = function (s, t) {
   const bar = Math.floor(s / 8), b = s % 8, root = ROOTS[bar], d = A.music;
   const m = MEL[s];
-  if (m) { note(t, mf(m), .32, { vol: .16, dest: d }); note(t, mf(m) * 4, .07, { vol: .025, dest: d }); }
-  if (b % 2 === 0) note(t, mf([root, root + 7, root + 12, root + 7][b / 2]), .24, { type: 'triangle', vol: .28, dest: d });
-  if (b === 2 || b === 6) CHORD[root].forEach(x => note(t, mf(x), .14, { type: 'triangle', vol: .045, dest: d }));
-  if (b % 2 === 1) noiseHit(t, .035, { freq: 7000, vol: .03, dest: d });
+  // melody: soft rounded notes (sine plus a quiet octave), eased in rather than plucked
+  if (m) { note(t, mf(m - 12), ST * 1.8, { vol: .085, attack: .03, dest: d }); note(t, mf(m), ST * 1.2, { vol: .012, attack: .03, dest: d }); }
+  // bass: just root and fifth on the strong beats
+  if (b === 0 || b === 4) note(t, mf(b ? root + 7 : root), ST * 3.5, { vol: .08, attack: .02, release: ST, dest: d });
+  // pad: a quiet held chord for the whole bar
+  if (b === 0) CHORD[root].forEach(x => note(t, mf(x), ST * 8, { vol: .011, attack: .25, release: ST * 2, dest: d }));
 };
 A.setMusic = function (on) {
   if (!A.ctx) return;
   A.musicOn = on;
   if (on) A.nextT = A.ctx.currentTime + .08;
   A.music.gain.cancelScheduledValues(A.ctx.currentTime);
-  A.music.gain.setTargetAtTime(on ? (A.duck ? .15 : .5) : 0, A.ctx.currentTime, .15);
+  A.music.gain.setTargetAtTime(on ? (A.duck ? MUSIC_DUCK : MUSIC_VOL) : 0, A.ctx.currentTime, .15);
 };
-A.setDuck = function (d) { A.duck = d; if (A.ctx && A.musicOn) A.music.gain.setTargetAtTime(d ? .15 : .5, A.ctx.currentTime, .12); };
+A.setDuck = function (d) { A.duck = d; if (A.ctx && A.musicOn) A.music.gain.setTargetAtTime(d ? MUSIC_DUCK : MUSIC_VOL, A.ctx.currentTime, .12); };
 A.applyMute = function () { if (A.ctx) A.master.gain.setTargetAtTime(A.muted ? 0 : 1, A.ctx.currentTime, .05); };

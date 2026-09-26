@@ -2,17 +2,29 @@
 'use strict';
 
 /* ================= VOICE (Web Speech API) ================= */
-const V = { voice: null, speaking: false, cur: 0, keep: null };
+const V = { voice: null, speaking: false, cur: 0, keep: null, onVoices: null };
 const hasTTS = 'speechSynthesis' in window;
+// The grown-up's voice choice. Voices differ per device, so this is saved on the device (not just for the session).
+const VP = { name: '', pitch: 'higher' };
+try { Object.assign(VP, JSON.parse(localStorage.getItem('vf-voice')) || {}); } catch (e) {}
+const saveVP = () => { try { localStorage.setItem('vf-voice', JSON.stringify(VP)); } catch (e) {} };
+const PITCH = { normal: 1.05, higher: 1.3, highest: 1.6 };
+const VOICE_SAMPLE = "Hi friend! Let's play with the volcano!";
+V.all = () => hasTTS ? speechSynthesis.getVoices() : [];
+const isEnglish = v => /^en([-_]|$)/i.test(v.lang);
+// The friendliest voice this device has, used when the grown-up leaves it on Automatic
+V.auto = function () {
+  const vs = V.all(); if (!vs.length) return null;
+  const en = vs.filter(isEnglish); const pool = en.length ? en : vs;
+  const prefs = ['Ana Online', 'Aria Online', 'Jenny Online', 'Samantha', 'Google US English', 'Karen', 'Moira', 'Tessa', 'Zira', 'Susan', 'Female', 'Aria', 'Jenny'];
+  for (const p of prefs) { const v = pool.find(v => v.name.includes(p)); if (v) return v; }
+  return pool.find(v => /en-US/i.test(v.lang)) || pool[0];
+};
 V.pick = function () {
   if (!hasTTS) return;
-  const vs = speechSynthesis.getVoices(); if (!vs.length) return;
-  const en = vs.filter(v => /^en([-_]|$)/i.test(v.lang)); const pool = en.length ? en : vs;
-  const prefs = ['Ana Online', 'Aria Online', 'Jenny Online', 'Samantha', 'Google US English', 'Karen', 'Moira', 'Tessa', 'Zira', 'Susan', 'Female', 'Aria', 'Jenny'];
-  for (const p of prefs) { const v = pool.find(v => v.name.includes(p)); if (v) { V.voice = v; return; } }
-  V.voice = pool.find(v => /en-US/i.test(v.lang)) || pool[0];
+  V.voice = (VP.name && V.all().find(v => v.name === VP.name)) || V.auto();
 };
-if (hasTTS) { V.pick(); speechSynthesis.onvoiceschanged = V.pick; }
+if (hasTTS) { V.pick(); speechSynthesis.onvoiceschanged = () => { V.pick(); if (V.onVoices) V.onVoices(); }; }
 V.say = function (text) {
   return new Promise(res => {
     const id = ++V.cur;
@@ -27,7 +39,7 @@ V.say = function (text) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     if (V.voice) { u.voice = V.voice; u.lang = V.voice.lang; } else u.lang = 'en-US';
-    u.rate = .86; u.pitch = 1.3; u.volume = 1;
+    u.rate = .86; u.pitch = PITCH[VP.pitch] || 1.3; u.volume = 1;
     u.onstart = () => { if (id === V.cur) { V.speaking = true; A.setDuck(true); if (G.state === 'quiz') $('#repeat').classList.add('talking'); } };
     u.onend = fin; u.onerror = fin;
     V.keep = u; // keep a reference so the browser does not drop the end event
