@@ -6,6 +6,7 @@ const G = { done: new Set(), state: 'home', woke: false, token: 0, level: 0, sta
 function dinoDo(cls) { dino.classList.remove('hop', 'dance', 'nervous'); void dino.getBoundingClientRect(); if (cls) dino.classList.add(cls); }
 dino.addEventListener('animationend', e => { if (e.animationName === 'hop') dino.classList.remove('hop'); });
 function showOnly(which) {
+  $('#helpers').classList.toggle('hidden', which !== 'puzzle');
   $('#puzzle').classList.toggle('hidden', which !== 'puzzle');
   $('#quiz').classList.toggle('hidden', which !== 'quiz');
   $('#prog').classList.toggle('hidden', which !== 'quiz');
@@ -142,14 +143,14 @@ function buildShapedPieces(cols, rows, nWhim) {
   const cells = [], whims = [];
   for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
     const poly = [C[j][i], ...Hs[j][i], ...Vs[j][i + 1], ...back(Hs[j + 1][i], C[j + 1][i]), ...back(Vs[j][i], C[j][i]).slice(0, -1)];
-    const piece = { poly, holes: [] };
+    const piece = { poly, holes: [], gi: i, gj: j };
     if (hosts.has(key(i, j))) {
       const cx = (C[j][i][0] + C[j][i + 1][0] + C[j + 1][i][0] + C[j + 1][i + 1][0]) / 4;
       const cy = (C[j][i][1] + C[j][i + 1][1] + C[j + 1][i][1] + C[j + 1][i + 1][1]) / 4;
       const size = S * .55, ang = rand(-.35, .35), co = Math.cos(ang), si = Math.sin(ang);
       const shape = WHIMSY[shapes[whims.length % shapes.length]].map(([x, y]) => [cx + (x * co - y * si) * size, cy + (x * si + y * co) * size]);
       piece.holes.push(shape);
-      whims.push({ poly: shape, holes: [], whimsy: true });
+      whims.push({ poly: shape, holes: [], whimsy: true, host: piece });
     }
     cells.push(piece);
   }
@@ -176,6 +177,14 @@ function makePieceEl(p, i) {
     + `<path class="jpHit" d="${d}" fill="none" fill-rule="evenodd" pointer-events="fill"/></svg>`;
   p.el = p.hit = box.firstElementChild;
 }
+/* ---------- Helper toggles on the puzzle screen: ghost picture and dashed outlines ---------- */
+function applyHelpers() {
+  $('#guideImg').style.display = S.ghost ? '' : 'none';
+  $('#cells').style.display = S.guides ? '' : 'none';
+  $('#ghostBtn').classList.toggle('off', !S.ghost); $('#guideBtn').classList.toggle('off', !S.guides);
+}
+$('#ghostBtn').addEventListener('click', () => { A.init(); SFX.tap(); S.ghost = !S.ghost; saveS(); applyHelpers(); V.say(S.ghost ? 'Picture on!' : 'Picture off!'); });
+$('#guideBtn').addEventListener('click', () => { A.init(); SFX.tap(); S.guides = !S.guides; saveS(); applyHelpers(); V.say(S.guides ? 'Outlines on!' : 'Outlines off!'); });
 function renderGuide() {
   const cells = $('#cells');
   if (P.shaped) {
@@ -186,65 +195,121 @@ function renderGuide() {
     cells.innerHTML = '<div></div>'.repeat(P.cols * P.rows);
   }
 }
+/* ---------- Groups: pieces that fit together join up and move as one ----------
+   Every piece belongs to a group. A group has one "origin": where the picture's top-left
+   corner would be on screen. Pieces in the same group share it, so they stay lined up exactly.
+   Two groups fit together when their origins match; the board is just the origin's final home. */
+const newGroup = p => { p.g = { pieces: [p], ox: 0, oy: 0, drag: null }; };
+function moveGroup(g, ox, oy) {
+  g.ox = ox; g.oy = oy;
+  g.pieces.forEach(p => { p.sx = ox + p.x * P.sc; p.sy = oy + p.y * P.sc; placeEl(p); });
+}
+// Which pieces really touch in the finished picture (grid neighbors, and each surprise shape with its host)
+function linkNeighbors(pieces) {
+  const byCell = new Map();
+  pieces.forEach(p => { p.nb = new Set(); if (p.gi != null) byCell.set(p.gi + ',' + p.gj, p); });
+  pieces.forEach(p => {
+    if (p.gi != null) [[1, 0], [0, 1]].forEach(([di, dj]) => { const q = byCell.get((p.gi + di) + ',' + (p.gj + dj)); if (q) { p.nb.add(q); q.nb.add(p); } });
+    if (p.host) { p.nb.add(p.host); p.host.nb.add(p); }
+  });
+}
 function layoutPuzzle(rescatter) {
   const L = computeLayout(P.pieces.length, P.cols, P.rows);
   Object.assign(P, L); P.sc = P.bw / PW;
   const b = $('#board');
   Object.assign(b.style, { left: P.bx + 'px', top: P.by + 'px', width: P.bw + 'px', height: P.bh + 'px' });
   renderGuide();
-  let si = 0;
   P.pieces.forEach(p => {
-    const w = p.w * P.sc, h = p.h * P.sc;
-    p.el.style.width = w + 'px'; p.el.style.height = h + 'px';
+    p.el.style.width = p.w * P.sc + 'px'; p.el.style.height = p.h * P.sc + 'px';
     if (!P.shaped) { // square pieces show the picture as a positioned background
       const img = p.el.style;
       img.backgroundImage = P.puz.pic; img.backgroundSize = `${P.bw}px ${P.bh}px`;
       img.backgroundPosition = `${-p.x * P.sc}px ${-p.y * P.sc}px`;
     }
-    if (p.placed) { p.sx = P.bx + p.x * P.sc; p.sy = P.by + p.y * P.sc; }
-    else if (rescatter) {
-      const sl = L.slots[si++ % L.slots.length];
-      p.sx = clamp(sl.x, 4, Math.max(4, innerWidth - w - 4)); p.sy = clamp(sl.y, 4, Math.max(4, innerHeight - h - 4));
-    }
-    placeEl(p);
+  });
+  let si = 0;
+  [...new Set(P.pieces.map(p => p.g))].forEach(g => {
+    if (g.placed) return moveGroup(g, P.bx, P.by);
+    if (!rescatter) return moveGroup(g, g.ox, g.oy);
+    // put the group's first piece in a free slot, then keep the whole group on screen
+    const a = g.pieces[0], sl = L.slots[si++ % L.slots.length];
+    let ox = clamp(sl.x, 4, Math.max(4, innerWidth - a.w * P.sc - 4)) - a.x * P.sc;
+    let oy = clamp(sl.y, 4, Math.max(4, innerHeight - a.h * P.sc - 4)) - a.y * P.sc;
+    const x0 = Math.min(...g.pieces.map(p => p.x)), x1 = Math.max(...g.pieces.map(p => p.x + p.w));
+    const y0 = Math.min(...g.pieces.map(p => p.y)), y1 = Math.max(...g.pieces.map(p => p.y + p.h));
+    ox = Math.max(4 - x0 * P.sc, Math.min(ox, innerWidth - 4 - x1 * P.sc));
+    oy = Math.max(4 - y0 * P.sc, Math.min(oy, innerHeight - 4 - y1 * P.sc));
+    moveGroup(g, ox, oy);
   });
 }
 function placeEl(p) {
-  p.el.style.transform = `translate3d(${p.sx}px,${p.sy}px,0) rotate(${p.drag || p.placed ? 0 : p.rot}deg) scale(${p.drag ? 1.08 : 1})`;
+  const solo = p.g.pieces.length === 1, lifted = !!p.g.drag;
+  const rot = p.placed || !solo || lifted ? 0 : p.rot; // loose single pieces sit a little tilted
+  p.el.style.transform = `translate3d(${p.sx}px,${p.sy}px,0) rotate(${rot}deg) scale(${lifted && solo ? 1.08 : 1})`;
 }
 function bindPiece(p) {
   const el = p.hit;
   el.addEventListener('pointerdown', e => {
-    if (p.placed || G.state !== 'puzzle' || p.drag) return;
+    const g = p.g;
+    if (p.placed || G.state !== 'puzzle' || g.drag) return;
     e.preventDefault(); A.init();
     try { el.setPointerCapture(e.pointerId); } catch (_) {}
-    p.drag = { id: e.pointerId, dx: e.clientX - p.sx, dy: e.clientY - p.sy };
-    p.el.style.zIndex = ++P.z; p.el.classList.add('drag'); SFX.pick(); placeEl(p);
+    g.drag = { id: e.pointerId, dx: e.clientX - g.ox, dy: e.clientY - g.oy, by: p };
+    g.pieces.forEach(q => { q.el.style.zIndex = ++P.z; q.el.classList.add('drag'); placeEl(q); });
+    SFX.pick();
   });
   el.addEventListener('pointermove', e => {
-    if (!p.drag || e.pointerId !== p.drag.id) return;
+    const g = p.g, d = g.drag;
+    if (!d || d.by !== p || e.pointerId !== d.id) return;
     e.preventDefault();
+    // keep the piece being held on screen; the rest of its group follows it
     const w = p.w * P.sc, h = p.h * P.sc;
-    p.sx = clamp(e.clientX - p.drag.dx, -w * .4, innerWidth - w * .6);
-    p.sy = clamp(e.clientY - p.drag.dy, -h * .4, innerHeight - h * .6);
-    placeEl(p);
+    const sx = clamp(e.clientX - d.dx + p.x * P.sc, -w * .4, innerWidth - w * .6);
+    const sy = clamp(e.clientY - d.dy + p.y * P.sc, -h * .4, innerHeight - h * .6);
+    moveGroup(g, sx - p.x * P.sc, sy - p.y * P.sc);
   });
-  const end = e => { if (!p.drag || e.pointerId !== p.drag.id) return; p.drag = null; p.el.classList.remove('drag'); dropPiece(p); };
+  const end = e => {
+    const g = p.g, d = g.drag;
+    if (!d || d.by !== p || e.pointerId !== d.id) return;
+    g.drag = null; g.pieces.forEach(q => q.el.classList.remove('drag'));
+    dropGroup(g, p);
+  };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
   el.addEventListener('lostpointercapture', end);
 }
-function dropPiece(p) {
-  const tx = P.bx + p.x * P.sc, ty = P.by + p.y * P.sc, w = p.w * P.sc, h = p.h * P.sc;
+const settle = pieces => { pieces.forEach(q => q.el.classList.add('settle')); setTimeout(() => pieces.forEach(q => q.el.classList.remove('settle')), 220); };
+function dropGroup(g, held) {
+  if (G.state !== 'puzzle') return g.pieces.forEach(placeEl);
+  const w = held.w * P.sc, h = held.h * P.sc;
   const snapDist = Math.max(60, Math.min(w, h) * .55); // generous for small hands
-  if (Math.hypot(p.sx - tx, p.sy - ty) < snapDist && G.state === 'puzzle') {
-    p.placed = true; p.sx = tx; p.sy = ty;
-    p.el.classList.add('placed'); p.el.style.zIndex = 2; placeEl(p);
-    SFX.snap(); sparkle(tx + w / 2, ty + h / 2, 16);
-    P.placed++; P.snaps++;
+  // 1) Dropped on its spot on the board: the whole group snaps in
+  if (Math.hypot(g.ox - P.bx, g.oy - P.by) < snapDist) {
+    g.placed = true;
+    g.pieces.forEach(q => { q.placed = true; q.el.classList.add('placed'); q.el.style.zIndex = 2; });
+    moveGroup(g, P.bx, P.by);
+    SFX.snap(); sparkle(held.sx + w / 2, held.sy + h / 2, 16);
+    P.placed += g.pieces.length; P.snaps++;
     if (P.placed === P.pieces.length) puzzleDone();
     else if (!V.speaking && (P.snaps === 1 || Math.random() < .35)) V.say(cheer());
-  } else placeEl(p);
+    return;
+  }
+  // 2) Dropped right next to a piece it really fits with: they join up and move together from now on
+  const mates = new Set();
+  g.pieces.forEach(a => a.nb.forEach(b => {
+    if (b.g !== g && !b.placed && Math.hypot(g.ox - b.g.ox, g.oy - b.g.oy) < snapDist) mates.add(b.g);
+  }));
+  if (mates.size) {
+    const into = [...mates][0];
+    [g, ...mates].forEach(x => { if (x !== into) x.pieces.forEach(q => { q.g = into; into.pieces.push(q); }); });
+    into.pieces.forEach(q => { q.el.classList.add('joined'); q.el.style.zIndex = ++P.z; });
+    settle(into.pieces); moveGroup(into, into.ox, into.oy);
+    SFX.join(); sparkle(held.sx + w / 2, held.sy + h / 2, 12);
+    P.joins++;
+    if (!V.speaking && (P.joins === 1 || Math.random() < .3)) V.say(joinCheer());
+    return;
+  }
+  g.pieces.forEach(placeEl);
 }
 function showPicker(again) {
   G.token++; G.state = 'picker'; homeBtn(true); G.rumbling = false; G.paused = false;
@@ -308,7 +373,7 @@ function startPuzzle(pz = P.puz) {
   $('#board').classList.remove('cheer');
   dinoDo(null); showOnly('puzzle');
   P.pieces.forEach(p => p.el.remove()); P.pieces = [];
-  P.placed = 0; P.snaps = 0; P.z = 10;
+  P.placed = 0; P.snaps = 0; P.joins = 0; P.z = 10;
   $('#full').classList.remove('show'); $('#board').classList.remove('done');
   P.shaped = S.shapes === 'fun';
   let defs = [];
@@ -318,14 +383,15 @@ function startPuzzle(pz = P.puz) {
   } else {
     [P.cols, P.rows] = gridFor(+S.pieces);
     const cw = PW / P.cols, ch = PH / P.rows;
-    for (let r = 0; r < P.rows; r++) for (let c = 0; c < P.cols; c++) defs.push({ x: c * cw, y: r * ch, w: cw, h: ch });
+    for (let r = 0; r < P.rows; r++) for (let c = 0; c < P.cols; c++) defs.push({ x: c * cw, y: r * ch, w: cw, h: ch, gi: c, gj: r });
   }
   defs.forEach(d => {
     const p = Object.assign(d, { placed: false, sx: 0, sy: 0, rot: rand(-9, 9), drag: null });
     makePieceEl(p, P.pieces.length); p.el.style.zIndex = ++P.z;
     bindPiece(p); $('#puzzle').appendChild(p.el); P.pieces.push(p);
   });
-  layoutPuzzle(true);
+  P.pieces.forEach(newGroup); linkNeighbors(P.pieces);
+  applyHelpers(); layoutPuzzle(true);
   V.say(P.shaped ? `Let's build ${pz.name}! Look for the fun shapes!` : `Let's build ${pz.name}! Drag the pieces onto the picture.`);
 }
 async function puzzleDone() {

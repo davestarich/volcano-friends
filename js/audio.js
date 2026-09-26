@@ -58,6 +58,11 @@ const SFX = {
     note(t, 900, .14, { slide: 260, vol: .35 }); noiseHit(t, .04, { freq: 2500, vol: .12 });
     bell(t + .06, mf(84), .4, .12);
   },
+  join() {
+    if (!A.ctx) return; const t = now();
+    note(t, 520, .09, { type: 'triangle', slide: 360, vol: .22 }); noiseHit(t, .03, { freq: 1800, vol: .08 });
+    bell(t + .04, mf(79), .3, .08);
+  },
   chime() { if (!A.ctx) return; const t = now(); [72, 76, 79, 84].forEach((m, i) => bell(t + i * .09, mf(m), .9, .17)); },
   soft() { if (!A.ctx) return; note(now(), 320, .16, { slide: 480, vol: .12 }); },
   wobble() {

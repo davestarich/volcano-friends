@@ -12,7 +12,7 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 function deck(arr) { let d = [], last = null; return () => { if (!d.length) { d = shuffle(arr); if (d[0] === last && d.length > 1) d.push(d.shift()); } last = d.shift(); return last; }; }
 
 /* ================= SETTINGS ================= */
-const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, shapes: 'square', speed: 'slow', music: true, voice: true };
+const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, shapes: 'square', ghost: true, guides: true, speed: 'slow', music: true, voice: true };
 const S = Object.assign({}, DEFAULTS);
 try { const saved = JSON.parse(sessionStorage.getItem('vf-settings')); if (saved) Object.assign(S, saved); } catch (e) {}
 const saveS = () => { try { sessionStorage.setItem('vf-settings', JSON.stringify(S)); } catch (e) {} };
@@ -21,6 +21,7 @@ const SPEED = { slow: 18, medium: 12, fast: 8 }; // seconds until eruption
 /* ================= PHRASES ================= */
 const praise = deck(["Good job!", "You did great!", "Wow, you're so smart!", "High five!", "Awesome!", "You got it!", "Super duper!", "Fantastic!", "Way to go!", "Yay, you did it!", "Amazing!", "Hooray!", "That's right!", "You're a star!", "Brilliant!"]);
 const encourage = deck(["Oops, try again!", "Almost! Try another one!", "Good try! Pick another one!", "Hmm, try again!", "Ooh, so close! Try again!"]);
+const joinCheer = deck(["They fit!", "Click! They match!", "Great match!", "Those go together!", "Snap!"]);
 const cheer = deck(["Nice!", "You got it!", "Great!", "Yay!", "Perfect!", "Good one!", "Wow!"]);
 const eruptLines = deck(["Wheee! Look at all that lava! Let's try again!", "Kaboom! That was so silly! Let's try again!", "Whoa, lava everywhere! Let's try again!"]);
 const rewardLines = ["Hooray! You answered ten questions! You're a volcano superstar!", "Wow! Ten stars! The volcano is so happy! Let's dance!"];

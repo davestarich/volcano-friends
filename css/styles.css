@@ -103,6 +103,17 @@ button{font-family:inherit;cursor:pointer}
 .jp .jpHit{cursor:grab}
 .jp.placed .jpHit{cursor:default}
 .jp.placed{transition:transform .18s ease-out}
+.piece.settle,.jp.settle{transition:transform .16s ease-out}
+.jp.joined .jpShadow{display:none}
+.piece.joined,.piece.joined.drag{box-shadow:none}
+#helpers{position:fixed;z-index:80;top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 70px);display:flex;gap:10px}
+#helpers .hudbtn{position:static;width:62px;height:62px}
+#helpers svg{width:70%;height:70%}
+#ghostBtn{background:var(--teal)}
+#guideBtn{background:var(--blue)}
+#helpers .slash{display:none}
+#helpers .off{background:#b9c3cc}
+#helpers .off .slash{display:inline}
 .piece.placed{border-color:transparent;border-radius:2px;box-shadow:none;transition:transform .18s ease-out,border-color .3s;cursor:default}
 
 /* ---------- quiz ---------- */
