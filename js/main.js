@@ -96,9 +96,9 @@ function homeBtn(on) { $('#homeBtn').classList.toggle('hidden', !on); }
 function showHome() {
   G.token++; G.state = 'home'; G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano(); dinoDo(null); showOnly(null); homeBtn(false);
-  ['#reward', '#celebrate', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
   const dino = PUZZLES[randi(1, PUZZLES.length - 1)]; pickVersion(dino);
-  $('#goPuzzle').style.backgroundImage = dino.awake;
+  $('#goPuzzle').style.backgroundImage = dino.pic;
   $('#start').classList.add('show');
   if (G.woke) V.say('What do you want to play? Puzzles, or the volcano game?');
 }

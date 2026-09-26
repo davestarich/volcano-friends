@@ -87,7 +87,7 @@ function resetVolcano() {
 function startQuiz(fresh) {
   homeBtn(true);
   G.token++; G.paused = false;
-  ['#reward', '#celebrate', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
   showOnly('quiz');
   if (fresh) G.count = 0;
   renderProgress(); dinoDo(null);

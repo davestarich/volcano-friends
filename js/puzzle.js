@@ -190,7 +190,7 @@ function layoutPuzzle(rescatter) {
   P.pieces.forEach(p => {
     const w = p.w * P.sc, h = p.h * P.sc, img = p.hit.style;
     p.el.style.width = w + 'px'; p.el.style.height = h + 'px';
-    img.backgroundImage = P.puz.sleep; img.backgroundSize = `${P.bw}px ${P.bh}px`;
+    img.backgroundImage = P.puz.pic; img.backgroundSize = `${P.bw}px ${P.bh}px`;
     img.backgroundPosition = `${-p.x * P.sc}px ${-p.y * P.sc}px`;
     if (P.shaped) img.clipPath = img.webkitClipPath = `path(evenodd, '${[p.poly, ...p.holes].map(r => ring(r, p.x, p.y, P.sc)).join(' ')}')`;
     if (p.placed) { p.sx = P.bx + p.x * P.sc; p.sy = P.by + p.y * P.sc; }
@@ -241,13 +241,13 @@ function dropPiece(p) {
 function showPicker(again) {
   G.token++; G.state = 'picker'; homeBtn(true); G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano(); dinoDo(null); showOnly(null);
-  ['#reward', '#celebrate', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
   const grid = $('#pickGrid'); grid.innerHTML = '';
   PUZZLES.forEach((pz, i) => {
     pickVersion(pz);
     const b = document.createElement('button'); b.className = 'ptile';
     b.setAttribute('aria-label', 'Build ' + pz.name);
-    b.style.backgroundImage = pz.awake; b.style.setProperty('--d', (i * .1) + 's');
+    b.style.backgroundImage = pz.pic; b.style.setProperty('--d', (i * .1) + 's');
     if (G.done.has(pz.id)) b.innerHTML = `<span class="badge">${starSVG('#ffd93d')}</span>`;
     b.addEventListener('click', () => { A.init(); SFX.tap(); startPuzzle(pz); });
     grid.appendChild(b);
@@ -294,9 +294,9 @@ function startPuzzle(pz = P.puz) {
   homeBtn(true);
   G.token++; G.state = 'puzzle'; G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano();
-  ['#reward', '#celebrate', '#start', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#start', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
   P.puz = pz;
-  $('#guideImg').style.backgroundImage = pz.sleep; $('#full').style.backgroundImage = pz.sleep;
+  $('#guideImg').style.backgroundImage = pz.pic; $('#full').style.backgroundImage = pz.pic;
   $('#board').classList.remove('cheer');
   dinoDo(null); showOnly('puzzle');
   P.pieces.forEach(p => p.el.remove()); P.pieces = [];
@@ -326,28 +326,12 @@ async function puzzleDone() {
   $('#board').classList.add('done');
   await wait(250);
   $('#full').classList.add('show'); SFX.fanfare(); confetti(160); dinoDo('dance');
-  if (pz.id !== 'volcano') {
-    // Dinosaur puzzles: the finished picture wakes up right on the board
-    await wait(1100); if (t !== G.token) return;
-    $('#full').style.backgroundImage = pz.awake; $('#board').classList.add('cheer'); SFX[pz.sound]();
-    const b = $('#board').getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, 30);
-    await wait(700); if (t !== G.token) return;
-    await V.say(`You built ${pz.name}!${pz.extra || ''}`); if (t !== G.token) return;
-    await wait(900); if (t !== G.token) return;
-    $('#board').classList.remove('cheer'); dinoDo(null);
-    showPicker(true);
-    return;
-  }
-  await wait(1400); if (t !== G.token) return;
-  const cel = $('#celebrate'), wrap = $('#celVol'), sv = wrap.querySelector('svg');
-  setFace(sv, 'sleep'); wrap.classList.remove('wake', 'dance');
-  cel.classList.add('show'); showOnly(null);
   await wait(900); if (t !== G.token) return;
-  setFace(sv, 'calm'); wrap.classList.add('wake'); SFX.boing();
-  await wait(1100); if (t !== G.token) return;
-  setFace(sv, 'happy'); wrap.classList.remove('wake'); wrap.classList.add('dance'); confetti(90); SFX.chime();
-  await V.say('You built the volcano!'); if (t !== G.token) return;
-  await wait(700); if (t !== G.token) return;
-  cel.classList.remove('show'); wrap.classList.remove('dance'); dinoDo(null);
+  $('#board').classList.add('cheer'); SFX[pz.sound]();
+  const b = $('#board').getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, 30);
+  await wait(600); if (t !== G.token) return;
+  await V.say(`You built ${pz.name}!${pz.extra || ''}`); if (t !== G.token) return;
+  await wait(900); if (t !== G.token) return;
+  $('#board').classList.remove('cheer'); dinoDo(null);
   showPicker(true);
 }
