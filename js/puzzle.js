@@ -161,14 +161,20 @@ function buildShapedPieces(cols, rows, nWhim) {
   });
 }
 const ring = (pts, ox = 0, oy = 0, k = 1) => 'M' + pts.map(([x, y]) => ((x - ox) * k).toFixed(1) + ' ' + ((y - oy) * k).toFixed(1)).join(' L') + ' Z';
-function makePieceEl(p) {
+// Fun-shape piece: ONE svg holding the picture, its cut-out, the outline and the touch area,
+// all in the same picture coordinates, so nothing can drift out of line (this used to be CSS
+// clip-path plus a separate SVG overlay, which Safari on iPad lined up differently).
+function makePieceEl(p, i) {
   if (!P.shaped) { p.el = p.hit = document.createElement('div'); p.el.className = 'piece'; return; }
-  const d = [p.poly, ...p.holes].map(r => ring(r)).join(' '), vb = `${p.x} ${p.y} ${p.w} ${p.h}`;
-  const el = document.createElement('div'); el.className = 'jp';
-  el.innerHTML = `<svg class="jpShadow" viewBox="${vb}" preserveAspectRatio="none"><path d="${d}" fill-rule="evenodd"/></svg>`
-    + `<div class="jpImg"></div>`
-    + `<svg class="jpLine" viewBox="${vb}" preserveAspectRatio="none"><path d="${d}" vector-effect="non-scaling-stroke"/></svg>`;
-  p.el = el; p.hit = el.querySelector('.jpImg');
+  const d = [p.poly, ...p.holes].map(r => ring(r)).join(' '), id = 'jpc' + i;
+  const box = document.createElement('div');
+  box.innerHTML = `<svg class="jp" viewBox="${p.x} ${p.y} ${p.w} ${p.h}" preserveAspectRatio="none">`
+    + `<defs><clipPath id="${id}"><path d="${d}" clip-rule="evenodd"/></clipPath></defs>`
+    + `<path class="jpShadow" d="${d}" fill-rule="evenodd"/>`
+    + `<image href="${P.puz.uri}" x="0" y="0" width="${PW}" height="${PH}" preserveAspectRatio="none" clip-path="url(#${id})"/>`
+    + `<path class="jpLine" d="${d}" fill="none" vector-effect="non-scaling-stroke"/>`
+    + `<path class="jpHit" d="${d}" fill="none" fill-rule="evenodd" pointer-events="fill"/></svg>`;
+  p.el = p.hit = box.firstElementChild;
 }
 function renderGuide() {
   const cells = $('#cells');
@@ -188,11 +194,13 @@ function layoutPuzzle(rescatter) {
   renderGuide();
   let si = 0;
   P.pieces.forEach(p => {
-    const w = p.w * P.sc, h = p.h * P.sc, img = p.hit.style;
+    const w = p.w * P.sc, h = p.h * P.sc;
     p.el.style.width = w + 'px'; p.el.style.height = h + 'px';
-    img.backgroundImage = P.puz.pic; img.backgroundSize = `${P.bw}px ${P.bh}px`;
-    img.backgroundPosition = `${-p.x * P.sc}px ${-p.y * P.sc}px`;
-    if (P.shaped) img.clipPath = img.webkitClipPath = `path(evenodd, '${[p.poly, ...p.holes].map(r => ring(r, p.x, p.y, P.sc)).join(' ')}')`;
+    if (!P.shaped) { // square pieces show the picture as a positioned background
+      const img = p.el.style;
+      img.backgroundImage = P.puz.pic; img.backgroundSize = `${P.bw}px ${P.bh}px`;
+      img.backgroundPosition = `${-p.x * P.sc}px ${-p.y * P.sc}px`;
+    }
     if (p.placed) { p.sx = P.bx + p.x * P.sc; p.sy = P.by + p.y * P.sc; }
     else if (rescatter) {
       const sl = L.slots[si++ % L.slots.length];
@@ -314,7 +322,7 @@ function startPuzzle(pz = P.puz) {
   }
   defs.forEach(d => {
     const p = Object.assign(d, { placed: false, sx: 0, sy: 0, rot: rand(-9, 9), drag: null });
-    makePieceEl(p); p.el.style.zIndex = ++P.z;
+    makePieceEl(p, P.pieces.length); p.el.style.zIndex = ++P.z;
     bindPiece(p); $('#puzzle').appendChild(p.el); P.pieces.push(p);
   });
   layoutPuzzle(true);

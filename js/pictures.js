@@ -419,7 +419,7 @@ ${cloudBank(548)}${littleBird(210, 240, .6, '#fff')}${littleBird(560, 330, .5, '
 }
 
 /* ================= PUZZLE LIST ================= */
-const svgURL = svg => 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) + '")';
+const svgURI = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 const PUZZLES = [
   { id: 'volcano', sound: 'boing', versions: [
     { name: 'the volcano island', draw: volcanoIsland }, { name: 'the volcano picnic', draw: volcanoPicnic }, { name: 'the snowy volcano', draw: volcanoSnow }] },
@@ -432,11 +432,11 @@ const PUZZLES = [
   { id: 'ptero', sound: 'squawk', versions: [
     { name: 'the flying Pterodactyl', draw: pteroIsland }, { name: 'the Pterodactyl nest', draw: pteroCliff }, { name: 'the balloon ride', draw: pteroBalloons }] },
 ];
-PUZZLES.forEach(pz => { pz.versions.forEach(v => { v.url = svgURL(v.draw()); }); pz.v = -1; });
+PUZZLES.forEach(pz => { pz.versions.forEach(v => { v.uri = svgURI(v.draw()); v.url = `url("${v.uri}")`; }); pz.v = -1; });
 // Choose which scene the picker shows next (never the same one twice in a row)
 function pickVersion(pz) {
   const n = pz.versions.length;
   let v = randi(0, n - 1);
   if (n > 1 && v === pz.v) v = (v + randi(1, n - 1)) % n;
-  pz.v = v; pz.pic = pz.versions[v].url; pz.name = pz.versions[v].name;
+  pz.v = v; pz.pic = pz.versions[v].url; pz.uri = pz.versions[v].uri; pz.name = pz.versions[v].name;
 }

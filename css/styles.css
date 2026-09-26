@@ -94,16 +94,15 @@ button{font-family:inherit;cursor:pointer}
 .piece{position:absolute;left:0;top:0;border:3px solid #fff;border-radius:12px;background-origin:border-box;background-clip:border-box;
   background-repeat:no-repeat;box-shadow:0 6px 14px rgba(0,0,0,.28);touch-action:none;cursor:grab;will-change:transform}
 .piece.drag{box-shadow:0 16px 30px rgba(0,0,0,.35);cursor:grabbing}
-.jp{position:absolute;left:0;top:0;pointer-events:none;will-change:transform}
-.jp svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-.jp .jpShadow{fill:rgba(0,0,0,.3);transform:translate(3px,5px)}
-.jp.drag .jpShadow{transform:translate(7px,13px);fill:rgba(0,0,0,.25)}
+.jp{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;touch-action:none}
+.jp .jpShadow{fill:rgba(0,0,0,.3);transform:translate(4px,6px)}
+.jp.drag .jpShadow{transform:translate(9px,15px);fill:rgba(0,0,0,.25)}
 .jp.placed .jpShadow{display:none}
-.jpImg{position:absolute;inset:0;background-repeat:no-repeat;pointer-events:auto;touch-action:none;cursor:grab}
-.jp .jpLine path{fill:none;stroke:#fff;stroke-width:2.5;stroke-linejoin:round}
-.jp.placed .jpLine path{stroke:rgba(255,255,255,.4);stroke-width:1.2}
+.jp .jpLine{stroke:#fff;stroke-width:2.5;stroke-linejoin:round}
+.jp.placed .jpLine{stroke:rgba(255,255,255,.4);stroke-width:1.2}
+.jp .jpHit{cursor:grab}
+.jp.placed .jpHit{cursor:default}
 .jp.placed{transition:transform .18s ease-out}
-.jp.placed .jpImg{cursor:default}
 .piece.placed{border-color:transparent;border-radius:2px;box-shadow:none;transition:transform .18s ease-out,border-color .3s;cursor:default}
 
 /* ---------- quiz ---------- */
