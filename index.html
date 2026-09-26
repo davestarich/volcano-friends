@@ -104,6 +104,16 @@ button{font-family:inherit;cursor:pointer}
 .piece{position:absolute;left:0;top:0;border:3px solid #fff;border-radius:12px;background-origin:border-box;background-clip:border-box;
   background-repeat:no-repeat;box-shadow:0 6px 14px rgba(0,0,0,.28);touch-action:none;cursor:grab;will-change:transform}
 .piece.drag{box-shadow:0 16px 30px rgba(0,0,0,.35);cursor:grabbing}
+.jp{position:absolute;left:0;top:0;pointer-events:none;will-change:transform}
+.jp svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.jp .jpShadow{fill:rgba(0,0,0,.3);transform:translate(3px,5px)}
+.jp.drag .jpShadow{transform:translate(7px,13px);fill:rgba(0,0,0,.25)}
+.jp.placed .jpShadow{display:none}
+.jpImg{position:absolute;inset:0;background-repeat:no-repeat;pointer-events:auto;touch-action:none;cursor:grab}
+.jp .jpLine path{fill:none;stroke:#fff;stroke-width:2.5;stroke-linejoin:round}
+.jp.placed .jpLine path{stroke:rgba(255,255,255,.4);stroke-width:1.2}
+.jp.placed{transition:transform .18s ease-out}
+.jp.placed .jpImg{cursor:default}
 .piece.placed{border-color:transparent;border-radius:2px;box-shadow:none;transition:transform .18s ease-out,border-color .3s;cursor:default}
 
 /* ---------- quiz ---------- */
@@ -158,10 +168,20 @@ button{font-family:inherit;cursor:pointer}
 /* ---------- overlays ---------- */
 .overlay{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:3vmin}
 .overlay.show{display:flex}
-#start{z-index:75;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.55),rgba(255,255,255,.1) 70%);cursor:pointer}
+#start{z-index:75;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.55),rgba(255,255,255,.1) 70%)}
 #title{font:900 clamp(38px,8vmin,86px)/1 var(--kid);letter-spacing:2px;text-align:center;padding:0 16px}
 #title span{display:inline-block;color:var(--c);-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:0 6px 0 rgba(0,0,0,.15);animation:bob 2.4s ease-in-out infinite}
-#startVol{height:min(40vh,50vw)}
+#choices{display:flex;flex-wrap:wrap;justify-content:center;gap:5vmin;padding:0 16px}
+.choice{--d:0s;position:relative;width:clamp(200px,min(38vw,52vh),380px);aspect-ratio:4/3;border-radius:28px;border:8px solid #fff;padding:0;overflow:visible;
+  background-size:100% 100%;box-shadow:0 12px 26px rgba(0,0,0,.22);animation:popIn .5s var(--d) both,bob 3s ease-in-out calc(var(--d) + .5s) infinite}
+#goQuiz{--d:.15s;background:linear-gradient(#8fd8ff,#d9f6ff 70%,#9be07a 70%);display:flex;align-items:flex-end;justify-content:center}
+#homeVol{height:88%}
+.cbadge{position:absolute;right:-18px;bottom:-18px;width:34%;aspect-ratio:1;border-radius:50%;background:var(--green);border:6px solid #fff;display:grid;place-items:center;box-shadow:0 6px 12px rgba(0,0,0,.2)}
+.cbadge svg{width:70%}
+.hb{--d:.3s;position:absolute;width:24%;aspect-ratio:1;border-radius:50%;border:4px solid #fff;background:var(--c);color:#fff;display:grid;place-items:center;
+  font:900 clamp(22px,4.5vmin,44px)/1 var(--kid);text-shadow:0 2px 0 rgba(0,0,0,.25);animation:bob 2.6s ease-in-out var(--d) infinite}
+#homeBtn{top:max(12px,env(safe-area-inset-top));left:calc(max(12px,env(safe-area-inset-left)) + 86px);width:74px;height:74px;background:var(--orange)}
+#homeBtn svg{width:66%;height:66%}
 .bigbtn{width:150px;height:150px;border-radius:50%;border:8px solid #fff;display:grid;place-items:center;padding:0;
   box-shadow:0 10px 24px rgba(0,0,0,.22),inset 0 -12px 0 rgba(0,0,0,.14)}
 .bigbtn svg{width:58%;height:58%}
@@ -170,7 +190,9 @@ button{font-family:inherit;cursor:pointer}
 #celebrate{z-index:40}
 #picker{background:rgba(255,255,255,.3)}
 #pickGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:3.5vmin;max-width:1100px;padding:84px 16px 0}
-#sizeRow{display:flex;flex-wrap:wrap;justify-content:center;gap:2.5vmin;padding:0 16px 12px}
+#sizeRow{display:flex;flex-wrap:wrap;justify-content:center;gap:2.5vmin 6vmin;padding:0 16px 12px}
+.btnGroup{display:flex;flex-wrap:wrap;justify-content:center;gap:2.5vmin}
+.modeBtn svg{width:78%}
 .sizeBtn{--sb:clamp(100px,14vmin,124px);width:var(--sb);height:var(--sb);border-radius:26px;border:6px solid #fff;background:var(--c);padding:6px 0 0;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;
   font:900 calc(var(--sb)*.3)/1 var(--kid);text-shadow:0 2px 0 rgba(0,0,0,.25);
@@ -279,7 +301,7 @@ button{font-family:inherit;cursor:pointer}
   <div id="rVol" class="vwrap dance"></div>
   <div id="rBtns">
     <button id="againBtn" class="bigbtn play" aria-label="Play again"><svg viewBox="0 0 64 64"><path d="M20,12 L52,32 L20,52Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg></button>
-    <button id="puzBtn" class="bigbtn puz" aria-label="New puzzle"><svg viewBox="0 0 64 64"><path d="M10,18 H24 a7,7 0 1 1 14,0 H52 V32 a7,7 0 1 1 0,14 V58 H10Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></button>
+    <button id="puzBtn" class="bigbtn puz" aria-label="Home"><svg viewBox="0 0 64 64"><path d="M8,32 L32,10 L56,32" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16,30 V54 H48 V30" fill="#fff"/><rect x="27" y="38" width="10" height="16" rx="2" fill="#ff8c42"/></svg></button>
   </div>
 </div>
 
@@ -289,12 +311,16 @@ button{font-family:inherit;cursor:pointer}
 <!-- START -->
 <div id="start" class="overlay show">
   <div id="title"></div>
-  <div id="startVol" class="vwrap"></div>
-  <button id="startBtn" class="bigbtn play" aria-label="Play"><svg viewBox="0 0 64 64"><path d="M20,12 L52,32 L20,52Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg></button>
+  <div id="choices">
+    <button id="goPuzzle" class="choice" aria-label="Puzzles"><span class="cbadge"><svg viewBox="0 0 64 64"><path d="M14,18 H26 C23,6 41,6 38,18 H50 V30 C62,27 62,45 50,42 V54 H38 C41,66 23,66 26,54 H14 V42 C2,45 2,27 14,30 Z" fill="#fff"/></svg></span></button>
+    <button id="goQuiz" class="choice" aria-label="Volcano game"><div id="homeVol" class="vwrap"></div>
+      <span class="hb" style="--c:#2ec4b6;left:6%;top:14%">1</span><span class="hb" style="--c:#9b5de5;right:7%;top:10%">A</span><span class="hb" style="--c:#ff5d8f;right:10%;bottom:12%;--d:.6s">3</span></button>
+  </div>
 </div>
 
 <canvas id="fx"></canvas>
 
+<button id="homeBtn" class="hudbtn hidden" aria-label="Home"><svg viewBox="0 0 64 64"><path d="M8,32 L32,10 L56,32" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16,30 V54 H48 V30" fill="#fff"/><rect x="27" y="38" width="10" height="16" rx="2" fill="#ff8c42"/></svg></button>
 <button id="mute" class="hudbtn" aria-label="Music on or off">
   <svg viewBox="0 0 64 64"><path d="M24,46 V16 L50,9 V39" stroke="#fff" stroke-width="6" fill="none" stroke-linejoin="round"/>
   <circle cx="17" cy="46" r="9" fill="#fff"/><circle cx="43" cy="40" r="9" fill="#fff"/>
@@ -320,7 +346,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="sacts">
       <button id="sFull">Full screen</button>
       <button id="sPuzzle">Pick a puzzle</button>
-      <button id="sSkip">Skip to questions</button>
+      <button id="sSkip">Volcano game</button>
       <button id="sDone" class="done">Done</button>
     </div>
   </div>
@@ -340,7 +366,7 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 function deck(arr) { let d = [], last = null; return () => { if (!d.length) { d = shuffle(arr); if (d[0] === last && d.length > 1) d.push(d.shift()); } last = d.shift(); return last; }; }
 
 /* ================= SETTINGS ================= */
-const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, speed: 'slow', music: true, voice: true };
+const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, shapes: 'square', speed: 'slow', music: true, voice: true };
 const S = Object.assign({}, DEFAULTS);
 try { const saved = JSON.parse(sessionStorage.getItem('vf-settings')); if (saved) Object.assign(S, saved); } catch (e) {}
 const saveS = () => { try { sessionStorage.setItem('vf-settings', JSON.stringify(S)); } catch (e) {} };
@@ -450,8 +476,9 @@ const DARK = '#2b2140';
 const eye = (x, y, r, aw) => aw
   ? `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${DARK}" stroke-width="4"/><circle cx="${x + r * .2}" cy="${y + r * .1}" r="${r * .55}" fill="${DARK}"/><circle cx="${x + r * .38}" cy="${y - r * .2}" r="${r * .2}" fill="#fff"/>`
   : `<path d="M${x - r},${y} Q${x},${y + r * .9} ${x + r},${y}" stroke="${DARK}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+let MIRROR = false; // set while drawing a mirrored picture
 const zzz = (x, y) => [[0, 0, 1], [40, -45, .8], [72, -82, .6]].map(([dx, dy, k]) =>
-  `<path transform="translate(${x + dx},${y + dy}) scale(${k})" d="M0,0 H22 L0,24 H22" stroke="#9b5de5" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+  `<path transform="translate(${x + dx},${y + dy}) scale(${MIRROR ? -k : k},${k})" d="M0,0 H22 L0,24 H22" stroke="#9b5de5" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
 const cheek = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#ff7aa8" opacity=".55"/>`;
 // Tube-shaped limb: a thick outline stroke with a thinner fill-colored stroke on top
 const limb = (d, fill, ink, w) => `<path d="${d}" stroke="${ink}" stroke-width="${w + 8}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${fill}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
@@ -465,17 +492,41 @@ function volcFace(aw) {
 const miniVolcano = (x, y, k, aw) => `<g transform="translate(${x},${y}) scale(${k})">${volcanoBody()}${volcFace(aw)}</g>`;
 function pic(o, content) {
   const [sx, sy, sk] = o.sun || [690, 95, .7];
+  const [s1, s2] = o.sky || ['#5fc8f5', '#d4f5ff'];
   const clouds = (o.clouds || [[40, 90, .8], [470, 60, .55]]).map(c => cloud(...c)).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" preserveAspectRatio="none">
-<defs>${volcanoDefs()}<linearGradient id="psky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc8f5"/><stop offset="1" stop-color="#d4f5ff"/></linearGradient></defs>
-<rect width="800" height="600" fill="url(#psky)"/>
-${sun(sx, sy, sk)}${clouds}${o.back || ''}
-<path d="M0,455 Q200,440 400,455 T800,450 V600 H0Z" fill="#3fc1d6"/>
+  const inner = `<rect width="800" height="600" fill="url(#psky)"/>
+${o.rainbow ? rainbowArc() : ''}${sun(sx, sy, sk)}${clouds}${o.back || ''}
+<path d="M0,455 Q200,440 400,455 T800,450 V600 H0Z" fill="${o.sea || '#3fc1d6'}"/>${o.mid || ''}
 ${o.noGround ? '' : `<path d="M0,515 Q200,490 400,515 T800,510 V600 H0Z" fill="${o.ground || '#7ed957'}" stroke="${o.gs || '#4fae3a'}" stroke-width="5"/>`}
-${content}</svg>`;
+${content}${o.front || ''}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" preserveAspectRatio="none">
+<defs>${volcanoDefs()}<linearGradient id="psky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s1}"/><stop offset="1" stop-color="${s2}"/></linearGradient></defs>
+${o.mirror ? `<g transform="matrix(-1 0 0 1 800 0)">${inner}</g>` : inner}</svg>`;
 }
 
+/* ---------- Scene props and themes (so each dinosaur can come in 3 versions) ---------- */
+const rainbowArc = () => `<g fill="none" stroke-width="16" opacity=".5">${['#ff5d8f', '#ff8c42', '#ffd93d', '#6bcb3a', '#3a86ff', '#9b5de5']
+  .map((c, i) => `<path d="M${70 + i * 16},470 A${330 - i * 16},${330 - i * 16} 0 0 1 ${730 - i * 16},470" stroke="${c}"/>`).join('')}</g>`;
+const fern = (x, y, s, flip) => `<g transform="translate(${x},${y}) scale(${flip ? -s : s},${s})" fill="#3aa845" stroke="#1f7a34" stroke-width="3" stroke-linejoin="round">${[-60, -35, -10, 15, 40]
+  .map(a => `<path transform="rotate(${a})" d="M0,0 C-12,-40 -7,-80 0,-110 C7,-80 12,-40 0,0Z"/>`).join('')}</g>`;
+const bush = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})" fill="#4cbf56" stroke="#2f8a44" stroke-width="4"><circle cx="-30" cy="-10" r="28"/><circle cx="30" cy="-10" r="28"/><circle cx="0" cy="-28" r="34"/><circle cx="-12" cy="-30" r="5" fill="#ff5d8f" stroke="none"/><circle cx="20" cy="-14" r="5" fill="#ffd93d" stroke="none"/></g>`;
+const nest = (x, y) => `<g transform="translate(${x},${y})"><ellipse rx="60" ry="16" fill="#7a4a24"/>
+<ellipse cx="-24" cy="-14" rx="16" ry="21" fill="#fff5e0" stroke="#c9a57a" stroke-width="3"/><ellipse cx="4" cy="-19" rx="16" ry="21" fill="#e3f7ff" stroke="#8fb9cc" stroke-width="3"/><ellipse cx="30" cy="-12" rx="15" ry="19" fill="#ffe3ef" stroke="#d99ab3" stroke-width="3"/>
+<circle cx="-28" cy="-20" r="3" fill="#c9a57a"/><circle cx="8" cy="-26" r="3" fill="#8fb9cc"/><circle cx="26" cy="-17" r="3" fill="#d99ab3"/>
+<path d="M-64,-2 Q0,40 64,-2 Q0,12 -64,-2Z" fill="#a0643a" stroke="#6b3f1f" stroke-width="4" stroke-linejoin="round"/></g>`;
+const pond = (x, y) => `<g transform="translate(${x},${y})"><ellipse rx="85" ry="22" fill="#5fd0e8" stroke="#2a9fbd" stroke-width="4"/><path d="M-40,-4 Q-20,-10 0,-4 M20,4 Q38,-2 55,4" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/></g>`;
+const butterfly = (x, y, c) => `<g transform="translate(${x},${y})" stroke="#7a3b6e" stroke-width="2.5"><ellipse cx="-9" cy="-6" rx="10" ry="12" fill="${c}" transform="rotate(-20 -9 -6)"/><ellipse cx="9" cy="-6" rx="10" ry="12" fill="${c}" transform="rotate(20 9 -6)"/><ellipse cx="-7" cy="8" rx="7" ry="8" fill="${c}"/><ellipse cx="7" cy="8" rx="7" ry="8" fill="${c}"/><rect x="-2.5" y="-12" width="5" height="26" rx="2.5" fill="#5a2a1c" stroke="none"/></g>`;
+const THEMES = {
+  beach: {},
+  jungle: { ground: '#4fb548', gs: '#2f8a2e', mid: '<path d="M0,480 Q120,440 260,470 Q400,430 540,465 Q680,440 800,470 V600 H0Z" fill="#79cf62"/>', front: fern(30, 600, .9) + fern(780, 600, .9, true) },
+  sunset: { sky: ['#ff9e7d', '#ffe3a3'], sea: '#6ab7d8', ground: '#f2c572', gs: '#d19a3c' },
+  rainbow: { rainbow: true, ground: '#8fe06b', gs: '#5bb53d' },
+};
+// Builds the options for pic(): theme first, then the dinosaur's own layout, then this version's tweaks
+const sceneOpts = (c, base) => Object.assign({}, THEMES[c.theme], base, c.o || {}, { mirror: !!c.mirror, back: (base.back || '') + (THEMES[c.theme].back || '') });
+
 function volcanoPic(aw) {
+  MIRROR = false;
   return pic({}, `${palm(80, 560, .95)}${palm(730, 560, .8, true)}
 <g transform="translate(200,172)">${volcanoBody()}${volcFace(aw)}</g>
 ${aw ? '' : zzz(560, 190)}
@@ -483,17 +534,25 @@ ${flower(640, 565, '#ff5d8f')}${flower(680, 580, '#9b5de5')}${flower(170, 578, '
 <g transform="translate(40,300) scale(1.3)" color="#6bcb3a"><use href="#dino" width="64" height="56"/></g>`);
 }
 
-function trexPic(aw) {
-  const f = '#5cc26b', s = '#2f7a3e', d = '#49a857';
+const TREX_V = [
+  { f: '#5cc26b', s: '#2f7a3e', d: '#49a857', belly: '#c9f2a8', theme: 'beach', o: { ground: '#f3d38a', gs: '#d4a84f' },
+    props: palm(740, 565, .75, true) + flower(640, 570, '#ff5d8f') + flower(120, 575, '#9b5de5') },
+  { f: '#ff8c42', s: '#b0501a', d: '#e8742c', belly: '#ffe0b5', theme: 'jungle', mirror: true,
+    props: bush(660, 572, .85) + flower(180, 578, '#ff5d8f') },
+  { f: '#9b5de5', s: '#5b2a9e', d: '#8447d1', belly: '#e3d0ff', theme: 'sunset',
+    props: palm(740, 565, .75, true) + nest(175, 560) },
+];
+function trexPic(aw, v = 0) {
+  const c = TREX_V[v], { f, s, d } = c; MIRROR = !!c.mirror;
   const mouth = aw
     ? `<path d="M515,238 Q565,292 612,228 Z" fill="#7a2336" stroke="${s}" stroke-width="5" stroke-linejoin="round"/><ellipse cx="566" cy="262" rx="18" ry="8" fill="#ff6f91"/><path d="M530,242 l7,10 l6,-8 M552,248 l6,10 l6,-9 M575,246 l6,9 l6,-10" fill="#fff" stroke="${s}" stroke-width="2"/>`
     : `<path d="M520,240 Q565,262 605,230" stroke="${s}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M536,247 l6,9 l6,-7 M557,251 l6,9 l6,-8 M578,246 l6,8 l5,-9" fill="#fff" stroke="${s}" stroke-width="2" stroke-linejoin="round"/>`;
-  return pic({ ground: '#f3d38a', gs: '#d4a84f', back: miniVolcano(40, 330, .35, aw) },
-`${palm(740, 565, .75, true)}
+  return pic(sceneOpts(c, { back: miniVolcano(40, 330, .35, aw) }),
+`${c.props}
 <g stroke="${s}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
  <rect x="432" y="400" width="42" height="112" rx="20" fill="${d}"/><ellipse cx="462" cy="514" rx="36" ry="13" fill="${d}"/>
  <path d="M70,445 C170,380 260,280 360,262 C420,250 450,240 470,215 L540,255 C520,300 500,330 490,370 C480,420 440,455 380,455 C300,460 250,430 200,420 C150,420 110,435 70,445 Z" fill="${f}"/>
- <ellipse cx="440" cy="395" rx="44" ry="50" fill="#c9f2a8" stroke="none"/>
+ <ellipse cx="440" cy="395" rx="44" ry="50" fill="${c.belly}" stroke="none"/>
  <g fill="${d}" stroke="none"><ellipse cx="330" cy="290" rx="20" ry="8" transform="rotate(-15 330 290)"/><ellipse cx="392" cy="272" rx="18" ry="7" transform="rotate(-10 392 272)"/><ellipse cx="255" cy="328" rx="18" ry="7" transform="rotate(-30 255 328)"/></g>
  <rect x="340" y="440" width="44" height="72" rx="20" fill="${f}"/><ellipse cx="372" cy="515" rx="42" ry="14" fill="${f}"/>
  <ellipse cx="360" cy="415" rx="55" ry="55" fill="${f}"/>
@@ -502,40 +561,55 @@ ${limb('M478,378 Q502,380 510,400', f, s, 10)}
 <ellipse cx="525" cy="205" rx="92" ry="62" fill="${f}" stroke="${s}" stroke-width="5"/>
 <ellipse cx="600" cy="186" rx="5" ry="4" fill="${s}"/>
 ${eye(515, 182, 17, aw)}${cheek(562, 226, 12)}${mouth}
-${aw ? '' : zzz(610, 120)}
-${flower(640, 570, '#ff5d8f')}${flower(120, 575, '#9b5de5')}`);
+${aw ? '' : zzz(610, 120)}`);
 }
 
-function brontoPic(aw) {
-  const f = '#5aa9ff', s = '#2d5fa8', d = '#4a90e2';
+const BRONTO_V = [
+  { f: '#5aa9ff', s: '#2d5fa8', d: '#4a90e2', belly: '#cfe6ff', spots: '#8cc4ff', theme: 'beach',
+    props: palm(745, 560, 1.1, true), front: flower(120, 560, '#ff5d8f') + flower(160, 580, '#ffbe0b') + flower(620, 575, '#9b5de5') },
+  { f: '#6bcb3a', s: '#3a7d1c', d: '#58b52b', belly: '#dcf5c8', spots: '#9be27a', theme: 'sunset', mirror: true,
+    props: palm(745, 560, 1.1, true), front: pond(165, 562) },
+  { f: '#ff8fb1', s: '#b83d6b', d: '#f07aa0', belly: '#ffe0ea', spots: '#ffc2d4', theme: 'rainbow',
+    props: palm(745, 560, 1.1, true), front: butterfly(170, 250, '#ffd93d') + butterfly(290, 205, '#8fe6ff') + flower(640, 575, '#9b5de5') },
+];
+function brontoPic(aw, v = 0) {
+  const c = BRONTO_V[v], { f, s, d } = c; MIRROR = !!c.mirror;
   const mouth = aw
     ? `<path d="M628,150 Q646,168 661,146 Z" fill="#7a2336" stroke="${s}" stroke-width="4" stroke-linejoin="round"/>`
     : `<path d="M630,152 Q645,160 658,148" stroke="${s}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
-  return pic({ sun: [120, 95, .7], clouds: [[300, 80, .6], [470, 45, .45]], back: miniVolcano(20, 330, .35, aw) },
-`${palm(745, 560, 1.1, true)}
+  return pic(sceneOpts(c, { sun: [120, 95, .7], clouds: [[300, 80, .6], [470, 45, .45]], back: miniVolcano(20, 330, .35, aw) }),
+`${c.props}
 <g stroke="${s}" stroke-width="5" stroke-linejoin="round">
  <rect x="290" y="400" width="44" height="115" rx="20" fill="${d}"/><rect x="445" y="400" width="44" height="115" rx="20" fill="${d}"/>
  <rect x="250" y="395" width="46" height="122" rx="20" fill="${f}"/><rect x="480" y="395" width="46" height="122" rx="20" fill="${f}"/>
  <path d="M40,470 C120,430 200,330 330,305 C420,290 480,300 520,280 C560,250 570,190 582,142 L630,152 C615,210 600,280 560,340 C540,400 480,432 380,432 C300,432 240,420 200,425 C140,435 90,455 40,470 Z" fill="${f}"/>
  <ellipse cx="615" cy="140" rx="48" ry="30" fill="${f}"/>
 </g>
-<ellipse cx="400" cy="408" rx="90" ry="20" fill="#cfe6ff"/>
-<g fill="#8cc4ff"><circle cx="300" cy="340" r="12"/><circle cx="350" cy="324" r="9"/><circle cx="402" cy="318" r="11"/><circle cx="250" cy="366" r="8"/><circle cx="455" cy="318" r="8"/></g>
+<ellipse cx="400" cy="408" rx="90" ry="20" fill="${c.belly}"/>
+<g fill="${c.spots}"><circle cx="300" cy="340" r="12"/><circle cx="350" cy="324" r="9"/><circle cx="402" cy="318" r="11"/><circle cx="250" cy="366" r="8"/><circle cx="455" cy="318" r="8"/></g>
 <g fill="#fff"><ellipse cx="262" cy="512" rx="7" ry="4"/><ellipse cx="284" cy="512" rx="7" ry="4"/><ellipse cx="492" cy="512" rx="7" ry="4"/><ellipse cx="514" cy="512" rx="7" ry="4"/></g>
 ${eye(622, 130, 11, aw)}${cheek(642, 150, 7)}${mouth}
 ${aw ? '' : zzz(670, 70)}
-${flower(120, 560, '#ff5d8f')}${flower(160, 580, '#ffbe0b')}${flower(620, 575, '#9b5de5')}`);
+${c.front}`);
 }
 
-function trikePic(aw) {
-  const f = '#ffb347', s = '#c96f1c', d = '#f29a2e', fr = '#ff7f50', horn = '#fff3d6';
+const TRIKE_V = [
+  { f: '#ffb347', s: '#c96f1c', d: '#f29a2e', fr: '#ff7f50', dots: '#ffd93d', theme: 'beach',
+    props: palm(752, 568, .72, true), front: flower(150, 565, '#ff5d8f') + flower(640, 585, '#3a86ff') + flower(200, 585, '#9b5de5') },
+  { f: '#2ec4b6', s: '#16786f', d: '#25ab9e', fr: '#3a86ff', dots: '#ffd93d', theme: 'rainbow', mirror: true,
+    props: palm(752, 568, .72, true), front: butterfly(160, 235, '#ff8fb1') + butterfly(310, 190, '#ffd93d') + flower(150, 570, '#ff5d8f') },
+  { f: '#ffd93d', s: '#c99a00', d: '#f2c500', fr: '#ff5d8f', dots: '#fff3a0', theme: 'jungle',
+    props: '', front: nest(160, 572) },
+];
+function trikePic(aw, v = 0) {
+  const c = TRIKE_V[v], { f, s, d, fr } = c, horn = '#fff3d6'; MIRROR = !!c.mirror;
   let bumps = ''; for (let a = -170; a <= -10; a += 26) { const r = a * Math.PI / 180; bumps += `<circle cx="${520 + Math.cos(r) * 88}" cy="${320 + Math.sin(r) * 88}" r="15" fill="${fr}" stroke="${s}" stroke-width="5"/>`; }
-  let dots = ''; for (let a = -160; a <= -20; a += 35) { const r = a * Math.PI / 180; dots += `<circle cx="${520 + Math.cos(r) * 62}" cy="${320 + Math.sin(r) * 62}" r="9" fill="#ffd93d"/>`; }
+  let dots = ''; for (let a = -160; a <= -20; a += 35) { const r = a * Math.PI / 180; dots += `<circle cx="${520 + Math.cos(r) * 62}" cy="${320 + Math.sin(r) * 62}" r="9" fill="${c.dots}"/>`; }
   const mouth = aw
     ? `<path d="M592,402 Q612,426 633,398 Z" fill="#7a2336" stroke="${s}" stroke-width="4" stroke-linejoin="round"/>`
     : `<path d="M595,405 Q614,415 630,400" stroke="${s}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
-  return pic({ back: miniVolcano(30, 330, .35, aw) },
-`${palm(752, 568, .72, true)}
+  return pic(sceneOpts(c, { back: miniVolcano(30, 330, .35, aw) }),
+`${c.props}
 <g stroke="${s}" stroke-width="5" stroke-linejoin="round">
  <rect x="258" y="410" width="44" height="100" rx="20" fill="${d}"/><rect x="438" y="410" width="44" height="100" rx="20" fill="${d}"/>
  <rect x="222" y="410" width="46" height="106" rx="20" fill="${f}"/><rect x="470" y="410" width="46" height="106" rx="20" fill="${f}"/>
@@ -552,27 +626,32 @@ ${dots}
 <path d="M628,362 Q636,330 655,318 Q650,345 643,366 Z" fill="${horn}" stroke="${s}" stroke-width="4" stroke-linejoin="round"/>
 ${eye(588, 366, 13, aw)}${cheek(606, 392, 9)}${mouth}
 ${aw ? '' : zzz(680, 250)}
-${flower(150, 565, '#ff5d8f')}${flower(640, 585, '#3a86ff')}${flower(200, 585, '#9b5de5')}`);
+${c.front}`);
 }
 
-function pteroPic(aw) {
-  const f = '#ff8fb1', s = '#b83d6b', w = '#ffc2d4';
+const PTERO_V = [
+  { f: '#ff8fb1', s: '#b83d6b', w: '#ffc2d4', belly: '#ffe0ea', line: '#e889a8', theme: 'beach' },
+  { f: '#6fb7ff', s: '#2d5fa8', w: '#bfe0ff', belly: '#e3f2ff', line: '#8cbef0', theme: 'sunset', mirror: true },
+  { f: '#8ac926', s: '#4a7a10', w: '#d6f5a8', belly: '#effbe0', line: '#a8d870', theme: 'rainbow' },
+];
+function pteroPic(aw, v = 0) {
+  const c = PTERO_V[v], { f, s, w } = c; MIRROR = !!c.mirror;
   const beak = aw
     ? `<path d="M482,242 L576,258 L482,262 Z" fill="#7a2336"/><path d="M482,234 L588,248 L484,248 Z" fill="#ffbe0b" stroke="#c98a00" stroke-width="3.5" stroke-linejoin="round"/><path d="M484,258 L570,266 L482,270 Z" fill="#ffbe0b" stroke="#c98a00" stroke-width="3.5" stroke-linejoin="round"/>`
     : `<path d="M482,238 L585,252 L482,262 Z" fill="#ffbe0b" stroke="#c98a00" stroke-width="3.5" stroke-linejoin="round"/>`;
-  return pic({ sun: [705, 80, .6], clouds: [[30, 80, .7], [560, 360, .5], [120, 380, .45]], noGround: true },
+  return pic(sceneOpts(c, { sun: [705, 80, .6], clouds: [[30, 80, .7], [560, 360, .5], [120, 380, .45]], noGround: true }),
 `<ellipse cx="400" cy="585" rx="300" ry="70" fill="#f3d38a" stroke="#d4a84f" stroke-width="5"/>
 ${miniVolcano(310, 420, .45, aw)}${palm(175, 590, .6)}${palm(625, 590, .6, true)}
 <g stroke="${s}" stroke-width="5" stroke-linejoin="round" fill="${w}">
  <path d="M380,275 Q260,160 70,170 Q150,210 170,260 Q200,250 230,275 Q260,262 290,290 Q330,280 380,300 Z"/>
  <path d="M420,275 Q540,160 730,170 Q650,210 630,260 Q600,250 570,275 Q540,262 510,290 Q470,280 420,300 Z"/>
 </g>
-<g stroke="#e889a8" stroke-width="3" fill="none" stroke-linecap="round"><path d="M370,280 Q250,220 120,185"/><path d="M430,280 Q550,220 680,185"/></g>
+<g stroke="${c.line}" stroke-width="3" fill="none" stroke-linecap="round"><path d="M370,280 Q250,220 120,185"/><path d="M430,280 Q550,220 680,185"/></g>
 ${limb('M388,322 L380,352', f, s, 8)}${limb('M414,322 L422,352', f, s, 8)}
 <path d="M350,292 L296,314 L352,306 Z" fill="${f}" stroke="${s}" stroke-width="4" stroke-linejoin="round"/>
 <path d="M440,222 L368,186 L456,210 Z" fill="${f}" stroke="${s}" stroke-width="4" stroke-linejoin="round"/>
 <ellipse cx="400" cy="290" rx="55" ry="38" fill="${f}" stroke="${s}" stroke-width="5"/>
-<ellipse cx="405" cy="300" rx="32" ry="20" fill="#ffe0ea"/>
+<ellipse cx="405" cy="300" rx="32" ry="20" fill="${c.belly}"/>
 <circle cx="455" cy="245" r="34" fill="${f}" stroke="${s}" stroke-width="5"/>
 ${beak}${eye(460, 236, 11, aw)}${cheek(468, 262, 7)}
 ${aw ? '' : zzz(560, 190)}`);
@@ -580,13 +659,22 @@ ${aw ? '' : zzz(560, 190)}`);
 
 const svgURL = svg => 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) + '")';
 const PUZZLES = [
-  { id: 'volcano', name: 'the volcano', draw: volcanoPic },
-  { id: 'trex', name: 'the T-Rex', draw: trexPic, sound: 'roar', extra: ' Roar!' },
-  { id: 'bronto', name: 'the Brontosaurus', draw: brontoPic, sound: 'roar' },
-  { id: 'trike', name: 'the Triceratops', draw: trikePic, sound: 'roar' },
-  { id: 'ptero', name: 'the Pterodactyl', draw: pteroPic, sound: 'squawk' },
+  { id: 'volcano', name: 'the volcano', draw: volcanoPic, versions: 1 },
+  { id: 'trex', name: 'the T-Rex', draw: trexPic, versions: 3, sound: 'roar', extra: ' Roar!' },
+  { id: 'bronto', name: 'the Brontosaurus', draw: brontoPic, versions: 3, sound: 'roar' },
+  { id: 'trike', name: 'the Triceratops', draw: trikePic, versions: 3, sound: 'roar' },
+  { id: 'ptero', name: 'the Pterodactyl', draw: pteroPic, versions: 3, sound: 'squawk' },
 ];
-PUZZLES.forEach(pz => { pz.sleep = svgURL(pz.draw(false)); pz.awake = svgURL(pz.draw(true)); });
+// Pre-draw every version (asleep and awake). pickVersion() chooses which one the picker shows next.
+PUZZLES.forEach(pz => {
+  pz.urls = [...Array(pz.versions)].map((_, v) => [svgURL(pz.draw(false, v)), svgURL(pz.draw(true, v))]);
+  pz.v = -1;
+});
+function pickVersion(pz) {
+  let v = randi(0, pz.versions - 1);
+  if (pz.versions > 1 && v === pz.v) v = (v + randi(1, pz.versions - 1)) % pz.versions; // never the same one twice in a row
+  pz.v = v; [pz.sleep, pz.awake] = pz.urls[v];
+}
 
 const meterSVG = `<svg viewBox="0 0 90 420" aria-hidden="true">
 <defs><linearGradient id="lavaG" gradientUnits="userSpaceOnUse" x1="0" y1="400" x2="0" y2="20"><stop offset="0" stop-color="#ffd93d"/><stop offset=".35" stop-color="#ff8c42"/><stop offset=".65" stop-color="#ff5d8f"/><stop offset="1" stop-color="#9b5de5"/></linearGradient>
@@ -610,7 +698,7 @@ $('#bg').innerHTML = sceneSVG();
 $('#qVolWrap').innerHTML = volcanoSVG('calm');
 $('#celVol').innerHTML = volcanoSVG('sleep');
 $('#rVol').innerHTML = volcanoSVG('happy');
-$('#startVol').innerHTML = volcanoSVG('sleep');
+$('#homeVol').innerHTML = volcanoSVG('happy');
 $('#meter').innerHTML = meterSVG;
 const TITLE_COLORS = ['#ff5d8f', '#ff8c42', '#ffbe0b', '#6bcb3a', '#2ec4b6', '#3a86ff', '#9b5de5'];
 $('#title').innerHTML = 'Volcano Friends'.split('').map((ch, i) => ch === ' ' ? '&nbsp;' : `<span style="--c:${TITLE_COLORS[i % 7]};animation-delay:${i * -.15}s">${ch}</span>`).join('');
@@ -880,7 +968,7 @@ function spawnPuff() {
 }
 
 /* ================= GAME STATE ================= */
-const G = { done: new Set(), state: 'start', token: 0, level: 0, stage: 0, rumbling: false, draining: false, paused: false, count: 0, q: null, lastKey: null, puffT: 0, emitting: 0, erupts: 0, snap: '' };
+const G = { done: new Set(), state: 'home', woke: false, token: 0, level: 0, stage: 0, rumbling: false, draining: false, paused: false, count: 0, q: null, lastKey: null, puffT: 0, emitting: 0, erupts: 0, snap: '' };
 function dinoDo(cls) { dino.classList.remove('hop', 'dance', 'nervous'); void dino.getBoundingClientRect(); if (cls) dino.classList.add(cls); }
 dino.addEventListener('animationend', e => { if (e.animationName === 'hop') dino.classList.remove('hop'); });
 function showOnly(which) {
@@ -890,8 +978,11 @@ function showOnly(which) {
 }
 
 /* ================= PHASE 1: PUZZLE ================= */
-const P = { puz: null, pieces: [], cols: 4, rows: 3, placed: 0, z: 10, snaps: 0, bw: 0, bh: 0, bx: 0, by: 0, pw: 0, ph: 0 };
+const PW = 800, PH = 600; // puzzle pictures are drawn at 800x600; pieces are cut in these units
+const P = { puz: null, pieces: [], shaped: false, cols: 4, rows: 3, placed: 0, z: 10, snaps: 0, bw: 0, bh: 0, bx: 0, by: 0, pw: 0, ph: 0, sc: 1 };
 const gridFor = n => n === 6 ? [3, 2] : n === 20 ? [5, 4] : n === 40 ? [8, 5] : [4, 3];
+// Fun-shape mode: [cols, rows, whimsies]. Jigsaw cells plus whimsy shapes add up to the chosen count.
+const shapeGridFor = n => n === 6 ? [2, 2, 2] : n === 20 ? [4, 4, 4] : n === 40 ? [7, 5, 5] : [3, 3, 3];
 
 function computeLayout(n, cols, rows) {
   const W = innerWidth, H = innerHeight, M = 12, TOP = 92;
@@ -938,67 +1029,188 @@ function computeLayout(n, cols, rows) {
   out.slots = shuffle(out.slots).map(s => ({ x: s.x + rand(-8, 8), y: s.y + rand(-8, 8) }));
   return out;
 }
+
+/* ---------- Fun-shape pieces: real jigsaw knobs plus dino-themed "whimsy" pieces ---------- */
+// Whimsy silhouettes, each a single outline. Any size; they are normalized when sampled.
+const WHIMSY_PATHS = {
+  trex: 'M8,70 C20,62 30,52 42,48 C44,36 50,24 62,20 C74,14 92,18 92,30 C92,38 84,40 76,40 L72,42 C72,48 70,54 66,58 L70,58 C73,60 72,65 68,64 L64,62 C62,70 60,76 58,80 L62,92 L52,92 L50,82 L42,82 L42,92 L32,92 L34,78 C24,76 16,74 8,70 Z',
+  bronto: 'M4,78 C20,70 26,52 44,50 C56,48 62,52 66,46 C70,36 70,20 76,12 C80,6 92,8 92,16 C92,22 86,22 82,22 C80,34 80,48 78,58 C78,66 74,72 70,74 L70,92 L62,92 L60,76 L42,76 L40,92 L32,92 L32,74 C22,76 12,80 4,78 Z',
+  foot: 'M50,95 C30,95 22,80 28,64 L14,30 C10,20 20,14 26,22 L40,50 L44,12 C45,3 55,3 56,12 L60,50 L74,22 C80,14 90,20 86,30 L72,64 C78,80 70,95 50,95 Z',
+  egg: 'M50,6 C72,6 86,42 86,62 C86,82 70,94 50,94 C30,94 14,82 14,62 C14,42 28,6 50,6 Z',
+  bone: 'M24,50 C12,50 6,38 14,30 C18,22 30,24 32,34 L68,34 C70,24 82,22 86,30 C94,38 88,50 76,50 C88,50 94,62 86,70 C82,78 70,76 68,66 L32,66 C30,76 18,78 14,70 C6,62 12,50 24,50 Z',
+  heart: 'M50,88 C20,65 5,48 8,30 C11,12 35,8 50,26 C65,8 89,12 92,30 C95,48 80,65 50,88 Z',
+  volcano: 'M8,90 L36,30 C38,24 44,22 46,28 L50,36 L54,28 C56,22 62,24 64,30 L92,90 Z',
+  star: (() => { let d = ''; for (let i = 0; i < 10; i++) { const r = i % 2 ? 21 : 50, a = -Math.PI / 2 + i * Math.PI / 5; d += (i ? 'L' : 'M') + (50 + Math.cos(a) * r).toFixed(1) + ',' + (50 + Math.sin(a) * r).toFixed(1); } return d + 'Z'; })(),
+};
+let WHIMSY = null; // name -> outline points in a 1x1 box centered on 0,0
+function whimsyShapes() {
+  if (WHIMSY) return WHIMSY;
+  WHIMSY = {};
+  const host = $('#gdefs').parentNode;
+  for (const [k, d] of Object.entries(WHIMSY_PATHS)) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', d); host.appendChild(el);
+    const L = el.getTotalLength(), pts = [];
+    for (let i = 0; i < 90; i++) { const q = el.getPointAtLength(L * i / 90); pts.push([q.x, q.y]); }
+    el.remove();
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), span = Math.max(x1 - x0, y1 - y0);
+    WHIMSY[k] = pts.map(([x, y]) => [(x - (x0 + x1) / 2) / span, (y - (y0 + y1) / 2) / span]);
+  }
+  return WHIMSY;
+}
+function cubicPts(p0, p1, p2, p3, n, out) {
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, m = 1 - t, a = m * m * m, b = 3 * m * m * t, c = 3 * m * t * t, d = t * t * t;
+    out.push([a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]]);
+  }
+}
+// One jigsaw edge from A to B with a knob on side `flip` (+1 or -1). Returns its points, A excluded.
+// Knob shape follows the classic jigsaw-generator curve, with a little random jitter per edge.
+function tabEdge(A, B, flip, S) {
+  const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+  const j = .04, a = rand(-j, j), b = rand(-j, j), c = rand(-j, j), d = rand(-j, j), e = rand(-j, j), t = .1, k = S / L, m = .5;
+  const q = [[0, 0], [.2, a], [m + (b + d) * k, a - c], [m + (b - t) * k, t + c], [m + (b - 2 * t - d) * k, 3 * t - c],
+    [m + (b + 2 * t - d) * k, 3 * t - c], [m + (b + t) * k, t + c], [m + (b + d) * k, e - c], [.8, e], [1, 0]]
+    .map(([u, v]) => [A[0] + ux * u * L + nx * v * S * flip, A[1] + uy * u * L + ny * v * S * flip]);
+  const out = [];
+  cubicPts(q[0], q[1], q[2], q[3], 10, out); cubicPts(q[3], q[4], q[5], q[6], 16, out); cubicPts(q[6], q[7], q[8], q[9], 10, out);
+  return out;
+}
+function buildShapedPieces(cols, rows, nWhim) {
+  const cw = PW / cols, ch = PH / rows, S = Math.min(cw, ch), key = (i, j) => i + ',' + j;
+  // wobbly grid corners (the outside border stays straight)
+  const C = [];
+  for (let j = 0; j <= rows; j++) {
+    C[j] = [];
+    for (let i = 0; i <= cols; i++) C[j][i] = [i * cw + (i > 0 && i < cols ? rand(-.07, .07) * cw : 0), j * ch + (j > 0 && j < rows ? rand(-.07, .07) * ch : 0)];
+  }
+  // cells that hold a whimsy: never side by side, and all their knobs point outward so the shape fits inside
+  const hosts = new Set();
+  for (const [i, j] of shuffle([...Array(cols * rows)].map((_, n) => [n % cols, Math.floor(n / cols)]))) {
+    if (hosts.size >= nWhim) break;
+    if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([di, dj]) => hosts.has(key(i + di, j + dj)))) hosts.add(key(i, j));
+  }
+  const side = f => f || (Math.random() < .5 ? 1 : -1);
+  const Hs = [], Vs = [];
+  for (let j = 0; j <= rows; j++) { // horizontal edges, left to right; +1 puts the knob below
+    Hs[j] = [];
+    for (let i = 0; i < cols; i++) Hs[j][i] = (j === 0 || j === rows) ? [C[j][i + 1]]
+      : tabEdge(C[j][i], C[j][i + 1], side(hosts.has(key(i, j - 1)) ? 1 : hosts.has(key(i, j)) ? -1 : 0), S);
+  }
+  for (let j = 0; j < rows; j++) { // vertical edges, top to bottom; +1 puts the knob on the left
+    Vs[j] = [];
+    for (let i = 0; i <= cols; i++) Vs[j][i] = (i === 0 || i === cols) ? [C[j + 1][i]]
+      : tabEdge(C[j][i], C[j + 1][i], side(hosts.has(key(i, j)) ? 1 : hosts.has(key(i - 1, j)) ? -1 : 0), S);
+  }
+  const back = (pts, start) => pts.slice(0, -1).reverse().concat([start]); // walk an edge the other way
+  const shapes = shuffle(Object.keys(whimsyShapes()));
+  const cells = [], whims = [];
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const poly = [C[j][i], ...Hs[j][i], ...Vs[j][i + 1], ...back(Hs[j + 1][i], C[j + 1][i]), ...back(Vs[j][i], C[j][i]).slice(0, -1)];
+    const piece = { poly, holes: [] };
+    if (hosts.has(key(i, j))) {
+      const cx = (C[j][i][0] + C[j][i + 1][0] + C[j + 1][i][0] + C[j + 1][i + 1][0]) / 4;
+      const cy = (C[j][i][1] + C[j][i + 1][1] + C[j + 1][i][1] + C[j + 1][i + 1][1]) / 4;
+      const size = S * .55, ang = rand(-.35, .35), co = Math.cos(ang), si = Math.sin(ang);
+      const shape = WHIMSY[shapes[whims.length % shapes.length]].map(([x, y]) => [cx + (x * co - y * si) * size, cy + (x * si + y * co) * size]);
+      piece.holes.push(shape);
+      whims.push({ poly: shape, holes: [], whimsy: true });
+    }
+    cells.push(piece);
+  }
+  // whimsies last, so they start on top of the pile and are easy to spot
+  return cells.concat(whims).map(p => {
+    const xs = p.poly.map(q => q[0]), ys = p.poly.map(q => q[1]);
+    const x = Math.min(...xs), y = Math.min(...ys);
+    return Object.assign(p, { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y });
+  });
+}
+const ring = (pts, ox = 0, oy = 0, k = 1) => 'M' + pts.map(([x, y]) => ((x - ox) * k).toFixed(1) + ' ' + ((y - oy) * k).toFixed(1)).join(' L') + ' Z';
+function makePieceEl(p) {
+  if (!P.shaped) { p.el = p.hit = document.createElement('div'); p.el.className = 'piece'; return; }
+  const d = [p.poly, ...p.holes].map(r => ring(r)).join(' '), vb = `${p.x} ${p.y} ${p.w} ${p.h}`;
+  const el = document.createElement('div'); el.className = 'jp';
+  el.innerHTML = `<svg class="jpShadow" viewBox="${vb}" preserveAspectRatio="none"><path d="${d}" fill-rule="evenodd"/></svg>`
+    + `<div class="jpImg"></div>`
+    + `<svg class="jpLine" viewBox="${vb}" preserveAspectRatio="none"><path d="${d}" vector-effect="non-scaling-stroke"/></svg>`;
+  p.el = el; p.hit = el.querySelector('.jpImg');
+}
+function renderGuide() {
+  const cells = $('#cells');
+  if (P.shaped) {
+    cells.style.gridTemplateColumns = cells.style.gridTemplateRows = '1fr';
+    cells.innerHTML = `<svg viewBox="0 0 ${PW} ${PH}" preserveAspectRatio="none" style="width:100%;height:100%;display:block"><path d="${P.pieces.map(p => ring(p.poly)).join(' ')}" fill="none" stroke="rgba(90,42,28,.3)" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/></svg>`;
+  } else {
+    cells.style.gridTemplateColumns = `repeat(${P.cols},1fr)`; cells.style.gridTemplateRows = `repeat(${P.rows},1fr)`;
+    cells.innerHTML = '<div></div>'.repeat(P.cols * P.rows);
+  }
+}
 function layoutPuzzle(rescatter) {
   const L = computeLayout(P.pieces.length, P.cols, P.rows);
-  Object.assign(P, L);
+  Object.assign(P, L); P.sc = P.bw / PW;
   const b = $('#board');
   Object.assign(b.style, { left: P.bx + 'px', top: P.by + 'px', width: P.bw + 'px', height: P.bh + 'px' });
-  const cells = $('#cells');
-  cells.style.gridTemplateColumns = `repeat(${P.cols},1fr)`; cells.style.gridTemplateRows = `repeat(${P.rows},1fr)`;
-  cells.innerHTML = '<div></div>'.repeat(P.cols * P.rows);
+  renderGuide();
   let si = 0;
   P.pieces.forEach(p => {
-    const s = p.el.style;
-    s.width = P.pw + 'px'; s.height = P.ph + 'px';
-    s.backgroundImage = P.puz.sleep; s.backgroundSize = `${P.bw}px ${P.bh}px`;
-    s.backgroundPosition = `${-p.c * P.pw}px ${-p.r * P.ph}px`;
-    if (p.placed) { p.x = P.bx + p.c * P.pw; p.y = P.by + p.r * P.ph; }
-    else if (rescatter) { const sl = L.slots[si++ % L.slots.length]; p.x = sl.x; p.y = sl.y; }
+    const w = p.w * P.sc, h = p.h * P.sc, img = p.hit.style;
+    p.el.style.width = w + 'px'; p.el.style.height = h + 'px';
+    img.backgroundImage = P.puz.sleep; img.backgroundSize = `${P.bw}px ${P.bh}px`;
+    img.backgroundPosition = `${-p.x * P.sc}px ${-p.y * P.sc}px`;
+    if (P.shaped) img.clipPath = img.webkitClipPath = `path(evenodd, '${[p.poly, ...p.holes].map(r => ring(r, p.x, p.y, P.sc)).join(' ')}')`;
+    if (p.placed) { p.sx = P.bx + p.x * P.sc; p.sy = P.by + p.y * P.sc; }
+    else if (rescatter) {
+      const sl = L.slots[si++ % L.slots.length];
+      p.sx = clamp(sl.x, 4, Math.max(4, innerWidth - w - 4)); p.sy = clamp(sl.y, 4, Math.max(4, innerHeight - h - 4));
+    }
     placeEl(p);
   });
 }
 function placeEl(p) {
-  p.el.style.transform = `translate3d(${p.x}px,${p.y}px,0) rotate(${p.drag || p.placed ? 0 : p.rot}deg) scale(${p.drag ? 1.08 : 1})`;
+  p.el.style.transform = `translate3d(${p.sx}px,${p.sy}px,0) rotate(${p.drag || p.placed ? 0 : p.rot}deg) scale(${p.drag ? 1.08 : 1})`;
 }
 function bindPiece(p) {
-  const el = p.el;
+  const el = p.hit;
   el.addEventListener('pointerdown', e => {
     if (p.placed || G.state !== 'puzzle' || p.drag) return;
     e.preventDefault(); A.init();
     try { el.setPointerCapture(e.pointerId); } catch (_) {}
-    p.drag = { id: e.pointerId, dx: e.clientX - p.x, dy: e.clientY - p.y };
-    el.style.zIndex = ++P.z; el.classList.add('drag'); SFX.pick(); placeEl(p);
+    p.drag = { id: e.pointerId, dx: e.clientX - p.sx, dy: e.clientY - p.sy };
+    p.el.style.zIndex = ++P.z; p.el.classList.add('drag'); SFX.pick(); placeEl(p);
   });
   el.addEventListener('pointermove', e => {
     if (!p.drag || e.pointerId !== p.drag.id) return;
     e.preventDefault();
-    p.x = clamp(e.clientX - p.drag.dx, -P.pw * .4, innerWidth - P.pw * .6);
-    p.y = clamp(e.clientY - p.drag.dy, -P.ph * .4, innerHeight - P.ph * .6);
+    const w = p.w * P.sc, h = p.h * P.sc;
+    p.sx = clamp(e.clientX - p.drag.dx, -w * .4, innerWidth - w * .6);
+    p.sy = clamp(e.clientY - p.drag.dy, -h * .4, innerHeight - h * .6);
     placeEl(p);
   });
-  const end = e => { if (!p.drag || e.pointerId !== p.drag.id) return; p.drag = null; el.classList.remove('drag'); dropPiece(p); };
+  const end = e => { if (!p.drag || e.pointerId !== p.drag.id) return; p.drag = null; p.el.classList.remove('drag'); dropPiece(p); };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
   el.addEventListener('lostpointercapture', end);
 }
 function dropPiece(p) {
-  const tx = P.bx + p.c * P.pw, ty = P.by + p.r * P.ph;
-  const snapDist = Math.max(70, Math.min(P.pw, P.ph) * .6); // generous for small hands
-  if (Math.hypot(p.x - tx, p.y - ty) < snapDist && G.state === 'puzzle') {
-    p.placed = true; p.x = tx; p.y = ty;
+  const tx = P.bx + p.x * P.sc, ty = P.by + p.y * P.sc, w = p.w * P.sc, h = p.h * P.sc;
+  const snapDist = Math.max(60, Math.min(w, h) * .55); // generous for small hands
+  if (Math.hypot(p.sx - tx, p.sy - ty) < snapDist && G.state === 'puzzle') {
+    p.placed = true; p.sx = tx; p.sy = ty;
     p.el.classList.add('placed'); p.el.style.zIndex = 2; placeEl(p);
-    SFX.snap(); sparkle(tx + P.pw / 2, ty + P.ph / 2, 16);
+    SFX.snap(); sparkle(tx + w / 2, ty + h / 2, 16);
     P.placed++; P.snaps++;
     if (P.placed === P.pieces.length) puzzleDone();
     else if (!V.speaking && (P.snaps === 1 || Math.random() < .35)) V.say(cheer());
   } else placeEl(p);
 }
-function showPicker() {
-  G.token++; G.state = 'picker'; G.rumbling = false; G.paused = false;
+function showPicker(again) {
+  G.token++; G.state = 'picker'; homeBtn(true); G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano(); dinoDo(null); showOnly(null);
   ['#reward', '#celebrate', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
   const grid = $('#pickGrid'); grid.innerHTML = '';
   PUZZLES.forEach((pz, i) => {
+    pickVersion(pz);
     const b = document.createElement('button'); b.className = 'ptile';
     b.setAttribute('aria-label', 'Build ' + pz.name);
     b.style.backgroundImage = pz.awake; b.style.setProperty('--d', (i * .1) + 's');
@@ -1008,7 +1220,7 @@ function showPicker() {
   });
   renderSizes();
   $('#picker').classList.add('show');
-  V.say('Which puzzle do you want to build?');
+  V.say(again ? 'Want to do another puzzle?' : 'Which puzzle do you want to build?');
 }
 // Piece-count buttons: the number plus a little grid picture, so no reading is needed
 const SIZES = [[6, '#2ec4b6'], [12, '#9b5de5'], [20, '#ff8c42'], [40, '#ff5d8f']];
@@ -1018,18 +1230,34 @@ function sizeIcon(n) {
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) r += `<rect x="${g + x * (w + g)}" y="${g + y * (h + g)}" width="${w}" height="${h}" rx="${Math.min(4, w / 4)}"/>`;
   return `<svg viewBox="0 0 100 75" fill="#fff" fill-opacity=".92">${r}</svg>`;
 }
+const MODES = [
+  ['square', '#3a86ff', 'Square pieces!', '<svg viewBox="0 0 100 75" fill="#fff" fill-opacity=".92"><rect x="16" y="4" width="32" height="32" rx="4"/><rect x="52" y="4" width="32" height="32" rx="4"/><rect x="16" y="40" width="32" height="32" rx="4"/><rect x="52" y="40" width="32" height="32" rx="4"/></svg>'],
+  ['fun', '#6bcb3a', 'Fun shape pieces!', '<svg viewBox="0 0 100 75" fill="#fff" fill-opacity=".95"><path d="M26,14 H40 C36,2 58,2 54,14 H68 V28 C80,24 80,46 68,42 V56 H54 C58,68 36,68 40,56 H26 V42 C14,46 14,24 26,28 Z"/><path d="M84,8 l3,7 l7,1 l-5,5 l1,7 l-6,-3 l-6,3 l1,-7 l-5,-5 l7,-1 Z"/></svg>'],
+];
 function renderSizes() {
   const row = $('#sizeRow'); row.innerHTML = '';
+  const modes = document.createElement('div'), sizes = document.createElement('div');
+  modes.className = sizes.className = 'btnGroup';
+  MODES.forEach(([m, c, say, icon]) => {
+    const b = document.createElement('button');
+    b.className = 'sizeBtn modeBtn' + (S.shapes === m ? ' on' : '');
+    b.style.setProperty('--c', c); b.setAttribute('aria-label', say);
+    b.innerHTML = icon;
+    b.addEventListener('click', () => { A.init(); SFX.tap(); S.shapes = m; saveS(); renderSizes(); V.say(say); });
+    modes.appendChild(b);
+  });
+  row.append(modes, sizes);
   SIZES.forEach(([n, c]) => {
     const b = document.createElement('button');
     b.className = 'sizeBtn' + (+S.pieces === n ? ' on' : '');
     b.style.setProperty('--c', c); b.setAttribute('aria-label', n + ' pieces');
     b.innerHTML = `${sizeIcon(n)}<span>${n}</span>`;
     b.addEventListener('click', () => { A.init(); SFX.tap(); S.pieces = n; saveS(); renderSizes(); V.say(`${n} pieces!`); });
-    row.appendChild(b);
+    sizes.appendChild(b);
   });
 }
 function startPuzzle(pz = P.puz) {
+  homeBtn(true);
   G.token++; G.state = 'puzzle'; G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano();
   ['#reward', '#celebrate', '#start', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
@@ -1037,18 +1265,26 @@ function startPuzzle(pz = P.puz) {
   $('#guideImg').style.backgroundImage = pz.sleep; $('#full').style.backgroundImage = pz.sleep;
   $('#board').classList.remove('cheer');
   dinoDo(null); showOnly('puzzle');
-  [P.cols, P.rows] = gridFor(+S.pieces);
   P.pieces.forEach(p => p.el.remove()); P.pieces = [];
   P.placed = 0; P.snaps = 0; P.z = 10;
   $('#full').classList.remove('show'); $('#board').classList.remove('done');
-  for (let r = 0; r < P.rows; r++) for (let c = 0; c < P.cols; c++) {
-    const el = document.createElement('div'); el.className = 'piece';
-    const p = { r, c, el, placed: false, x: 0, y: 0, rot: rand(-9, 9), drag: null };
-    el.style.zIndex = ++P.z;
-    bindPiece(p); $('#puzzle').appendChild(el); P.pieces.push(p);
+  P.shaped = S.shapes === 'fun';
+  let defs = [];
+  if (P.shaped) {
+    const [c, r, w] = shapeGridFor(+S.pieces); P.cols = c; P.rows = r;
+    defs = buildShapedPieces(c, r, w);
+  } else {
+    [P.cols, P.rows] = gridFor(+S.pieces);
+    const cw = PW / P.cols, ch = PH / P.rows;
+    for (let r = 0; r < P.rows; r++) for (let c = 0; c < P.cols; c++) defs.push({ x: c * cw, y: r * ch, w: cw, h: ch });
   }
+  defs.forEach(d => {
+    const p = Object.assign(d, { placed: false, sx: 0, sy: 0, rot: rand(-9, 9), drag: null });
+    makePieceEl(p); p.el.style.zIndex = ++P.z;
+    bindPiece(p); $('#puzzle').appendChild(p.el); P.pieces.push(p);
+  });
   layoutPuzzle(true);
-  V.say(`Let's build ${pz.name}! Drag the pieces onto the picture.`);
+  V.say(P.shaped ? `Let's build ${pz.name}! Look for the fun shapes!` : `Let's build ${pz.name}! Drag the pieces onto the picture.`);
 }
 async function puzzleDone() {
   const t = ++G.token; G.state = 'celebrate'; const pz = P.puz;
@@ -1062,10 +1298,10 @@ async function puzzleDone() {
     $('#full').style.backgroundImage = pz.awake; $('#board').classList.add('cheer'); SFX[pz.sound]();
     const b = $('#board').getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, 30);
     await wait(700); if (t !== G.token) return;
-    await V.say(`You built ${pz.name}!${pz.extra || ''} Let's play!`); if (t !== G.token) return;
-    await wait(600); if (t !== G.token) return;
+    await V.say(`You built ${pz.name}!${pz.extra || ''}`); if (t !== G.token) return;
+    await wait(900); if (t !== G.token) return;
     $('#board').classList.remove('cheer'); dinoDo(null);
-    startQuiz(true);
+    showPicker(true);
     return;
   }
   await wait(1400); if (t !== G.token) return;
@@ -1076,10 +1312,10 @@ async function puzzleDone() {
   setFace(sv, 'calm'); wrap.classList.add('wake'); SFX.boing();
   await wait(1100); if (t !== G.token) return;
   setFace(sv, 'happy'); wrap.classList.remove('wake'); wrap.classList.add('dance'); confetti(90); SFX.chime();
-  await V.say("You built the volcano! Let's play!"); if (t !== G.token) return;
-  await wait(500); if (t !== G.token) return;
+  await V.say('You built the volcano!'); if (t !== G.token) return;
+  await wait(700); if (t !== G.token) return;
   cel.classList.remove('show'); wrap.classList.remove('dance'); dinoDo(null);
-  startQuiz(true);
+  showPicker(true);
 }
 
 /* ================= PHASE 2: KEEP THE VOLCANO CALM ================= */
@@ -1166,6 +1402,7 @@ function resetVolcano() {
   G.emitting = 0; G.draining = false;
 }
 function startQuiz(fresh) {
+  homeBtn(true);
   G.token++; G.paused = false;
   ['#reward', '#celebrate', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
   showOnly('quiz');
@@ -1238,7 +1475,7 @@ $('#repeat').addEventListener('pointerdown', e => {
   if (G.q && (G.state === 'quiz' || G.state === 'correct') && !G.paused) { SFX.tap(); V.say(G.q.speech); }
 });
 $('#againBtn').addEventListener('click', () => { A.init(); SFX.tap(); startQuiz(true); });
-$('#puzBtn').addEventListener('click', () => { A.init(); SFX.tap(); showPicker(); });
+$('#puzBtn').addEventListener('click', () => { A.init(); SFX.tap(); showHome(); });
 
 /* ================= MAIN LOOP ================= */
 let lastT = performance.now();
@@ -1327,7 +1564,11 @@ $('#sDone').addEventListener('click', () => {
   }
 });
 // From the start screen these buttons also count as "press play" (unlocks sound on tablets)
-function wakeAudio() { A.init(); if (G.state === 'start') A.setMusic(S.music); }
+// The first tap anywhere meaningful unlocks sound on tablets (and goes full screen on touch devices)
+function wakeAudio() {
+  A.init();
+  if (!G.woke) { G.woke = true; if (matchMedia('(pointer:coarse)').matches) goFull(); A.setMusic(S.music); }
+}
 $('#sPuzzle').addEventListener('click', () => { closeSettings(); wakeAudio(); showPicker(); });
 $('#sSkip').addEventListener('click', () => { closeSettings(); wakeAudio(); startQuiz(true); });
 $('#sFull').addEventListener('click', () => { if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } else goFull(); });
@@ -1343,14 +1584,21 @@ function goFull() {
   } catch (e) {}
 }
 
-/* ================= START ================= */
-$('#start').addEventListener('click', () => {
-  if (G.state !== 'start') return;
-  A.init();
-  if (matchMedia('(pointer:coarse)').matches) goFull();
-  SFX.tap(); A.setMusic(S.music);
-  showPicker();
-});
+/* ================= HOME: pick puzzles or the volcano game ================= */
+function homeBtn(on) { $('#homeBtn').classList.toggle('hidden', !on); }
+function showHome() {
+  G.token++; G.state = 'home'; G.rumbling = false; G.paused = false;
+  V.stop(); resetVolcano(); dinoDo(null); showOnly(null); homeBtn(false);
+  ['#reward', '#celebrate', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
+  const dino = PUZZLES[randi(1, PUZZLES.length - 1)]; pickVersion(dino);
+  $('#goPuzzle').style.backgroundImage = dino.awake;
+  $('#start').classList.add('show');
+  if (G.woke) V.say('What do you want to play? Puzzles, or the volcano game?');
+}
+$('#goPuzzle').addEventListener('click', () => { wakeAudio(); SFX.tap(); showPicker(); });
+$('#goQuiz').addEventListener('click', () => { wakeAudio(); SFX.tap(); startQuiz(true); });
+$('#homeBtn').addEventListener('click', () => { A.init(); SFX.tap(); showHome(); });
+showHome();
 
 /* ================= GLOBAL ================= */
 document.addEventListener('contextmenu', e => e.preventDefault());
