@@ -10,6 +10,7 @@ function showOnly(which) {
   $('#puzzle').classList.toggle('hidden', which !== 'puzzle');
   $('#quiz').classList.toggle('hidden', which !== 'quiz');
   $('#prog').classList.toggle('hidden', which !== 'quiz');
+  syncPeek();
 }
 
 /* ================= PHASE 1: PUZZLE ================= */
@@ -182,7 +183,20 @@ function applyHelpers() {
   $('#guideImg').style.display = S.ghost ? '' : 'none';
   $('#cells').style.display = S.guides ? '' : 'none';
   $('#ghostBtn').classList.toggle('off', !S.ghost); $('#guideBtn').classList.toggle('off', !S.guides);
+  syncPeek();
 }
+// Little picture of the finished puzzle: shown when the ghost picture is off. Tap it to see it big; tap again to close.
+function syncPeek() {
+  const show = !S.ghost && !$('#puzzle').classList.contains('hidden');
+  $('#peekBtn').classList.toggle('hidden', !show);
+  if (!show) closePeek();
+}
+const closePeek = () => $('#peekBig').classList.remove('show');
+$('#peekBtn').addEventListener('click', () => {
+  A.init(); SFX.tap();
+  if ($('#peekBig').classList.toggle('show')) V.say("Here's the whole picture!");
+});
+$('#peekBig').addEventListener('pointerdown', e => { e.preventDefault(); SFX.tap(); closePeek(); });
 $('#ghostBtn').addEventListener('click', () => { A.init(); SFX.tap(); S.ghost = !S.ghost; saveS(); applyHelpers(); V.say(S.ghost ? 'Picture on!' : 'Picture off!'); });
 $('#guideBtn').addEventListener('click', () => { A.init(); SFX.tap(); S.guides = !S.guides; saveS(); applyHelpers(); V.say(S.guides ? 'Outlines on!' : 'Outlines off!'); });
 function renderGuide() {
@@ -370,6 +384,7 @@ function startPuzzle(pz = P.puz) {
   ['#reward', '#start', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
   P.puz = pz;
   $('#guideImg').style.backgroundImage = pz.pic; $('#full').style.backgroundImage = pz.pic;
+  $('#peekBtn').style.backgroundImage = pz.pic; $('#peekBig .pic').style.backgroundImage = pz.pic; closePeek();
   $('#board').classList.remove('cheer');
   dinoDo(null); showOnly('puzzle');
   P.pieces.forEach(p => p.el.remove()); P.pieces = [];
@@ -396,6 +411,7 @@ function startPuzzle(pz = P.puz) {
 }
 async function puzzleDone() {
   const t = ++G.token; G.state = 'celebrate'; const pz = P.puz;
+  closePeek();
   G.done.add(pz.id);
   $('#board').classList.add('done');
   await wait(250);
