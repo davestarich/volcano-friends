@@ -83,8 +83,10 @@
 <div id="picker" class="overlay"><div id="pickGrid"></div></div>
 <!-- After a picture is picked: choose piece style and count, then Play -->
 <div id="setup" class="overlay"><div id="setupCard">
-  <div id="setupPic"></div>
-  <div id="sizeRow"></div>
+  <div class="setupGrid">
+    <div class="setupCol"><div id="stylePreview" class="setupTile"></div><div id="modeGroup" class="btnGroup"></div></div>
+    <div class="setupCol"><div id="setupPic" class="setupTile"></div><div id="countGroup" class="btnGroup"></div></div>
+  </div>
   <div class="setupBtns"><button id="setupBack" class="bigbtn back" aria-label="Back to the pictures"><svg viewBox="0 0 64 64"><path d="M38,14 L20,32 L38,50" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="setupGo" class="bigbtn play" aria-label="Play"><svg viewBox="0 0 64 64"><path d="M20,12 L52,32 L20,52Z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg></button></div>
 </div></div>
 

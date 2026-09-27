@@ -372,9 +372,8 @@ $('#setupGo').addEventListener('click', () => { A.init(); SFX.tap(); startPuzzle
 $('#setupBack').addEventListener('click', () => { A.init(); SFX.tap(); closeSetup(); });
 $('#setup').addEventListener('pointerdown', e => { if (e.target.id === 'setup') closeSetup(); });
 function renderSizes() {
-  const row = $('#sizeRow'); row.innerHTML = '';
-  const modes = document.createElement('div'), sizes = document.createElement('div');
-  modes.className = sizes.className = 'btnGroup';
+  const modes = $('#modeGroup'), sizes = $('#countGroup');
+  modes.innerHTML = sizes.innerHTML = '';
   MODES.forEach(([m, c, say, icon]) => {
     const b = document.createElement('button');
     b.className = 'sizeBtn modeBtn' + (S.shapes === m ? ' on' : '');
@@ -383,7 +382,6 @@ function renderSizes() {
     b.addEventListener('click', () => { A.init(); SFX.tap(); S.shapes = m; saveS(); renderSizes(); V.say(say); });
     modes.appendChild(b);
   });
-  row.append(modes, sizes);
   SIZES.forEach(([n, c]) => {
     const b = document.createElement('button');
     b.className = 'sizeBtn' + (+S.pieces === n ? ' on' : '');
@@ -392,6 +390,19 @@ function renderSizes() {
     b.addEventListener('click', () => { A.init(); SFX.tap(); S.pieces = n; saveS(); renderSizes(); V.say(`${n} pieces!`); });
     sizes.appendChild(b);
   });
+  renderStylePreview();
+}
+// Preview of the chosen piece style: four pieces pulled slightly apart so their shapes are easy to see
+// (fun shapes use the real jigsaw cutter, so it includes knobs and a little surprise shape)
+function renderStylePreview() {
+  const cols = ['#8fd3ff', '#ffc2d4', '#ffe68a', '#b8f0a8', '#d9c2ff'];
+  const pieces = S.shapes === 'fun' ? buildShapedPieces(2, 2, 1)
+    : [0, 1, 2, 3].map(n => { const x = (n % 2) * 400, y = Math.floor(n / 2) * 300; return { poly: [[x, y], [x + 400, y], [x + 400, y + 300], [x, y + 300]], holes: [] }; });
+  const body = pieces.map((p, i) => {
+    const cx = p.poly.reduce((s, q) => s + q[0], 0) / p.poly.length, cy = p.poly.reduce((s, q) => s + q[1], 0) / p.poly.length;
+    return `<path transform="translate(${((cx - 400) * .12).toFixed(1)},${((cy - 300) * .12).toFixed(1)})" d="${[p.poly, ...p.holes].map(r => ring(r)).join(' ')}" fill-rule="evenodd" fill="${cols[i % cols.length]}" stroke="#4a5a78" stroke-width="10" stroke-linejoin="round"/>`;
+  }).join('');
+  $('#stylePreview').innerHTML = `<svg viewBox="-50 -40 900 680" aria-hidden="true">${body}</svg>`;
 }
 function startPuzzle(pz = P.puz) {
   homeBtn(true);

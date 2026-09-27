@@ -197,11 +197,16 @@ button{font-family:inherit;cursor:pointer}
 .bigbtn.puz{background:var(--orange);width:120px;height:120px}
 #picker{background:rgba(255,255,255,.3)}
 #pickGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:3.5vmin;max-width:1100px;padding:84px 16px 0}
-#sizeRow{display:flex;flex-wrap:wrap;justify-content:center;gap:2.5vmin 6vmin}
 #setup{z-index:65;background:rgba(40,20,60,.35);padding:16px}
 #setupCard{background:#fff;border-radius:28px;padding:3vmin 3.5vmin;display:flex;flex-direction:column;align-items:center;gap:3vmin;
   max-width:min(96vw,920px);max-height:96vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:popIn .3s both}
-#setupPic{width:clamp(160px,min(34vw,30vh),300px);aspect-ratio:4/3;border-radius:18px;border:6px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.2);background:#fdf8ee center/100% 100% no-repeat}
+/* two columns: style preview over the style buttons, the picture over the piece counts */
+.setupGrid{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:3vmin 6vmin}
+.setupCol{display:flex;flex-direction:column;align-items:center;gap:2.5vmin}
+.setupTile{width:clamp(150px,min(26vw,27vh),260px);aspect-ratio:4/3;border-radius:18px;border:6px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+#setupPic{background:#fdf8ee center/100% 100% no-repeat}
+#stylePreview{background:#f3f7ff;display:grid;place-items:center;overflow:hidden}
+#stylePreview svg{width:94%;height:94%;animation:popIn .3s both}
 .setupBtns{display:flex;gap:6vmin;align-items:center}
 .setupBtns .bigbtn{width:112px;height:112px}
 .bigbtn.back{background:#9aa6b2}
