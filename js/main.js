@@ -32,6 +32,7 @@ const OPTS = [
   { key: 'mathOps', label: 'Math (within 10)', opts: [['plus', 'Adding'], ['both', 'Adding + taking away']], show: () => S.mode === 'math' },
   { key: 'choices', label: 'Answer bubbles', opts: [[3, '3'], [4, '4 (Advanced)']] },
   { key: 'speed', label: 'Volcano speed', opts: [['slow', 'Slow'], ['medium', 'Medium'], ['fast', 'Fast']] },
+  { key: 'snap', label: 'Puzzle snap help', opts: [['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']] },
   { key: 'music', label: 'Music', opts: [[true, 'On'], [false, 'Off']] },
   { key: 'voice', label: 'Voice', opts: [[true, 'On'], [false, 'Off']] },
 ];
@@ -136,7 +137,7 @@ function homeBtn(on) { $('#homeBtn').classList.toggle('hidden', !on); }
 function showHome() {
   G.token++; G.state = 'home'; G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano(); dinoDo(null); showOnly(null); homeBtn(false);
-  ['#reward', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#picker', '#setup'].forEach(s => $(s).classList.remove('show', 'ready'));
   const dino = PUZZLES[randi(1, PUZZLES.length - 1)]; pickVersion(dino);
   $('#goPuzzle').style.backgroundImage = dino.pic;
   $('#start').classList.add('show');

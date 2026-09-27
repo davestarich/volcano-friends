@@ -199,15 +199,11 @@ $('#peekBtn').addEventListener('click', () => {
 $('#peekBig').addEventListener('pointerdown', e => { e.preventDefault(); SFX.tap(); closePeek(); });
 $('#ghostBtn').addEventListener('click', () => { A.init(); SFX.tap(); S.ghost = !S.ghost; saveS(); applyHelpers(); V.say(S.ghost ? 'Picture on!' : 'Picture off!'); });
 $('#guideBtn').addEventListener('click', () => { A.init(); SFX.tap(); S.guides = !S.guides; saveS(); applyHelpers(); V.say(S.guides ? 'Outlines on!' : 'Outlines off!'); });
+// Dashed outlines on the board, drawn the same way for both modes: one SVG in picture coordinates.
+// (Square mode used to be a CSS grid of dashed boxes, which Safari on iPad squashed toward the bottom.)
 function renderGuide() {
-  const cells = $('#cells');
-  if (P.shaped) {
-    cells.style.gridTemplateColumns = cells.style.gridTemplateRows = '1fr';
-    cells.innerHTML = `<svg viewBox="0 0 ${PW} ${PH}" preserveAspectRatio="none" style="width:100%;height:100%;display:block"><path d="${P.pieces.map(p => ring(p.poly)).join(' ')}" fill="none" stroke="rgba(90,42,28,.3)" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/></svg>`;
-  } else {
-    cells.style.gridTemplateColumns = `repeat(${P.cols},1fr)`; cells.style.gridTemplateRows = `repeat(${P.rows},1fr)`;
-    cells.innerHTML = '<div></div>'.repeat(P.cols * P.rows);
-  }
+  const outline = p => p.poly ? ring(p.poly) : `M${p.x} ${p.y} H${p.x + p.w} V${p.y + p.h} H${p.x} Z`;
+  $('#cells').innerHTML = `<svg viewBox="0 0 ${PW} ${PH}" preserveAspectRatio="none" style="width:100%;height:100%;display:block"><path d="${P.pieces.map(outline).join(' ')}" fill="none" stroke="rgba(90,42,28,.3)" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/></svg>`;
 }
 /* ---------- Groups: pieces that fit together join up and move as one ----------
    Every piece belongs to a group. A group has one "origin": where the picture's top-left
@@ -292,11 +288,20 @@ function bindPiece(p) {
   el.addEventListener('pointercancel', end);
   el.addEventListener('lostpointercapture', end);
 }
+// How close a drop must be to snap (onto the board, or onto a matching piece).
+// Easy is generous for small hands; 40-piece puzzles are a little tighter because their pieces are small.
+// Medium and Hard (grown-up settings) shrink it further.
+const SNAP_HELP = { easy: 1, medium: .7, hard: .45 };
+function snapDistance(w, h) {
+  const big = P.pieces.length >= 40;
+  const easy = Math.max(big ? 45 : 60, Math.min(w, h) * (big ? .45 : .55));
+  return easy * (SNAP_HELP[S.snap] || 1);
+}
 const settle = pieces => { pieces.forEach(q => q.el.classList.add('settle')); setTimeout(() => pieces.forEach(q => q.el.classList.remove('settle')), 220); };
 function dropGroup(g, held) {
   if (G.state !== 'puzzle') return g.pieces.forEach(placeEl);
   const w = held.w * P.sc, h = held.h * P.sc;
-  const snapDist = Math.max(60, Math.min(w, h) * .55); // generous for small hands
+  const snapDist = snapDistance(w, h);
   // 1) Dropped on its spot on the board: the whole group snaps in
   if (Math.hypot(g.ox - P.bx, g.oy - P.by) < snapDist) {
     g.placed = true;
@@ -328,7 +333,7 @@ function dropGroup(g, held) {
 function showPicker(again) {
   G.token++; G.state = 'picker'; homeBtn(true); G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano(); dinoDo(null); showOnly(null);
-  ['#reward', '#start'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#start', '#setup'].forEach(s => $(s).classList.remove('show', 'ready'));
   const grid = $('#pickGrid'); grid.innerHTML = '';
   PUZZLES.forEach((pz, i) => {
     pickVersion(pz);
@@ -336,10 +341,9 @@ function showPicker(again) {
     b.setAttribute('aria-label', 'Build ' + pz.name);
     b.style.backgroundImage = pz.pic; b.style.setProperty('--d', (i * .1) + 's');
     if (G.done.has(pz.id)) b.innerHTML = `<span class="badge">${starSVG('#ffd93d')}</span>`;
-    b.addEventListener('click', () => { A.init(); SFX.tap(); startPuzzle(pz); });
+    b.addEventListener('click', () => { A.init(); SFX.tap(); openSetup(pz); });
     grid.appendChild(b);
   });
-  renderSizes();
   $('#picker').classList.add('show');
   V.say(again ? 'Want to do another puzzle?' : 'Which puzzle do you want to build?');
 }
@@ -355,6 +359,18 @@ const MODES = [
   ['square', '#3a86ff', 'Square pieces!', '<svg viewBox="0 0 100 75" fill="#fff" fill-opacity=".92"><rect x="16" y="4" width="32" height="32" rx="4"/><rect x="52" y="4" width="32" height="32" rx="4"/><rect x="16" y="40" width="32" height="32" rx="4"/><rect x="52" y="40" width="32" height="32" rx="4"/></svg>'],
   ['fun', '#6bcb3a', 'Fun shape pieces!', '<svg viewBox="0 0 100 75" fill="#fff" fill-opacity=".95"><path d="M26,14 H40 C36,2 58,2 54,14 H68 V28 C80,24 80,46 68,42 V56 H54 C58,68 36,68 40,56 H26 V42 C14,46 14,24 26,28 Z"/><path d="M84,8 l3,7 l7,1 l-5,5 l1,7 l-6,-3 l-6,3 l1,-7 l-5,-5 l7,-1 Z"/></svg>'],
 ];
+// Pop-up after a picture is picked: piece style and count, then Play (her last choices stay selected)
+function openSetup(pz) {
+  P.next = pz;
+  $('#setupPic').style.backgroundImage = pz.pic;
+  renderSizes();
+  $('#setup').classList.add('show');
+  V.say('Pick your pieces, then press play!');
+}
+const closeSetup = () => $('#setup').classList.remove('show');
+$('#setupGo').addEventListener('click', () => { A.init(); SFX.tap(); startPuzzle(P.next); });
+$('#setupBack').addEventListener('click', () => { A.init(); SFX.tap(); closeSetup(); });
+$('#setup').addEventListener('pointerdown', e => { if (e.target.id === 'setup') closeSetup(); });
 function renderSizes() {
   const row = $('#sizeRow'); row.innerHTML = '';
   const modes = document.createElement('div'), sizes = document.createElement('div');
@@ -381,7 +397,7 @@ function startPuzzle(pz = P.puz) {
   homeBtn(true);
   G.token++; G.state = 'puzzle'; G.rumbling = false; G.paused = false;
   V.stop(); resetVolcano();
-  ['#reward', '#start', '#picker'].forEach(s => $(s).classList.remove('show', 'ready'));
+  ['#reward', '#start', '#picker', '#setup'].forEach(s => $(s).classList.remove('show', 'ready'));
   P.puz = pz;
   $('#guideImg').style.backgroundImage = pz.pic; $('#full').style.backgroundImage = pz.pic;
   $('#peekBtn').style.backgroundImage = pz.pic; $('#peekBig .pic').style.backgroundImage = pz.pic; closePeek();

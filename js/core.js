@@ -12,7 +12,7 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 function deck(arr) { let d = [], last = null; return () => { if (!d.length) { d = shuffle(arr); if (d[0] === last && d.length > 1) d.push(d.shift()); } last = d.shift(); return last; }; }
 
 /* ================= SETTINGS ================= */
-const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, shapes: 'square', ghost: true, guides: true, speed: 'slow', music: true, voice: true };
+const DEFAULTS = { mode: 'numbers', numMax: 10, letterCase: 'upper', mathOps: 'plus', choices: 3, pieces: 12, shapes: 'square', ghost: true, guides: true, snap: 'easy', speed: 'slow', music: true, voice: true };
 const S = Object.assign({}, DEFAULTS);
 try { const saved = JSON.parse(sessionStorage.getItem('vf-settings')); if (saved) Object.assign(S, saved); } catch (e) {}
 const saveS = () => { try { sessionStorage.setItem('vf-settings', JSON.stringify(S)); } catch (e) {} };
