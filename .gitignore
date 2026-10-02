@@ -1,2 +1,5 @@
 # Local tooling (Claude preview server config)
 .claude/
+
+# Source photos and AI originals (her toy photos, large files); the game uses the small copies in img/
+picture_examples/

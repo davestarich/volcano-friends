@@ -431,8 +431,11 @@ const PUZZLES = [
     { name: 'the Triceratops family', draw: trikeFamily }, { name: 'the Triceratops garden', draw: trikeGarden }, { name: 'the camping Triceratops', draw: trikeCamp }] },
   { id: 'ptero', sound: 'squawk', versions: [
     { name: 'the flying Pterodactyl', draw: pteroIsland }, { name: 'the Pterodactyl nest', draw: pteroCliff }, { name: 'the balloon ride', draw: pteroBalloons }] },
+  // Her own stuffed animals: picture files (4:3) instead of drawings
+  { id: 'dragon', sound: 'roar', extra: ' Roar!', versions: [
+    { name: 'Baby Dragon', src: 'img/baby-dragon.jpg' }] },
 ];
-PUZZLES.forEach(pz => { pz.versions.forEach(v => { v.uri = svgURI(v.draw()); v.url = `url("${v.uri}")`; }); pz.v = -1; });
+PUZZLES.forEach(pz => { pz.versions.forEach(v => { v.uri = v.src || svgURI(v.draw()); v.url = `url("${v.uri}")`; }); pz.v = -1; });
 // Choose which scene the picker shows next (never the same one twice in a row)
 function pickVersion(pz) {
   const n = pz.versions.length;
