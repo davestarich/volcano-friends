@@ -19,10 +19,19 @@ button{font-family:inherit;cursor:pointer}
 #bird .wing{transform-box:fill-box;transform-origin:50% 100%;animation:flap .35s ease-in-out infinite alternate}
 @keyframes fly{0%{transform:translate(-120px,0)}25%{transform:translate(25vw,-3vh)}50%{transform:translate(50vw,2vh)}75%{transform:translate(75vw,-2vh)}100%{transform:translate(calc(100vw + 120px),0)}}
 @keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(-.6)}}
-#dino{position:fixed;right:1.5vw;bottom:1vh;width:clamp(90px,15vmin,160px);z-index:2;pointer-events:none;transform-origin:50% 100%}
-#dino.hop{animation:hop .7s ease-out}
-#dino.dance{animation:dance .8s ease-in-out infinite}
-#dino.nervous{animation:shake .35s linear infinite}
+#buddy{position:fixed;right:1.5vw;bottom:1vh;width:clamp(90px,15vmin,160px);z-index:2;pointer-events:none;transform-origin:50% 100%}
+#buddy.hop{animation:hop .7s ease-out}
+/* the dino buddy's happy dance: squash, hop and lean left, land, hop and lean right */
+#buddy.dance{animation:dinoDance .9s ease-in-out infinite}
+@keyframes dinoDance{
+  0%,100%{transform:translateY(0) rotate(0) scale(1,1)}
+  15%{transform:translateY(0) rotate(0) scale(1.12,.86)}
+  35%{transform:translateY(-38%) rotate(-12deg) scale(.95,1.06)}
+  50%{transform:translateY(0) rotate(0) scale(1.12,.86)}
+  70%{transform:translateY(-38%) rotate(12deg) scale(.95,1.06)}
+  85%{transform:translateY(0) rotate(0) scale(1.06,.92)}
+}
+#buddy.nervous{animation:shake .35s linear infinite}
 @keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}15%{transform:scale(1.1,.9)}45%{transform:translateY(-45%) scale(.95,1.05)}75%{transform:translateY(0) scale(1.1,.9)}}
 
 /* ---------- volcano character ---------- */

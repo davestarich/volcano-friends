@@ -118,4 +118,4 @@ const TITLE_COLORS = ['#ff5d8f', '#ff8c42', '#ffbe0b', '#6bcb3a', '#2ec4b6', '#3
 $('#title').innerHTML = 'Volcano Friends'.split('').map((ch, i) => ch === ' ' ? '&nbsp;' : `<span style="--c:${TITLE_COLORS[i % 7]};animation-delay:${i * -.15}s">${ch}</span>`).join('');
 const qVol = $('#qVolWrap svg');
 const lavaFill = $('#lavaFill');
-const dino = $('#dino');
+const dino = $('#buddy'); // the dino buddy in the corner (#dino is the small dino drawing template)
